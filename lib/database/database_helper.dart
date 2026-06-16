@@ -20,8 +20,9 @@ class DatabaseHelper {
     final path = join(dbPath, 'hesabati.db');
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -33,6 +34,7 @@ class DatabaseHelper {
         phone TEXT,
         notes TEXT,
         avatar_color TEXT,
+        category INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )
@@ -44,12 +46,28 @@ class DatabaseHelper {
         customer_id INTEGER NOT NULL,
         type INTEGER NOT NULL,
         amount REAL NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'ج.م',
+        exchange_rate REAL,
         note TEXT,
+        image_path TEXT,
         date TEXT NOT NULL,
         created_at TEXT NOT NULL,
         FOREIGN KEY (customer_id) REFERENCES customers (id) ON DELETE CASCADE
       )
     ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+          "ALTER TABLE customers ADD COLUMN category INTEGER NOT NULL DEFAULT 0");
+      await db.execute(
+          "ALTER TABLE transactions ADD COLUMN currency TEXT NOT NULL DEFAULT 'ج.م'");
+      await db.execute(
+          "ALTER TABLE transactions ADD COLUMN exchange_rate REAL");
+      await db.execute(
+          "ALTER TABLE transactions ADD COLUMN image_path TEXT");
+    }
   }
 
   // ============ Customer Operations ============
@@ -147,14 +165,18 @@ class DatabaseHelper {
 
   // ============ Balance Calculations ============
 
+  // المبلغ بالعملة الأساسية = amount * exchange_rate (أو 1 لو مفيش سعر صرف)
+  static const String _baseAmountExpr =
+      'amount * COALESCE(exchange_rate, 1.0)';
+
   Future<double> getCustomerBalance(int customerId) async {
     final db = await database;
     final debitResult = await db.rawQuery(
-      'SELECT SUM(amount) as total FROM transactions WHERE customer_id = ? AND type = ?',
+      'SELECT SUM($_baseAmountExpr) as total FROM transactions WHERE customer_id = ? AND type = ?',
       [customerId, TransactionType.debit.index],
     );
     final creditResult = await db.rawQuery(
-      'SELECT SUM(amount) as total FROM transactions WHERE customer_id = ? AND type = ?',
+      'SELECT SUM($_baseAmountExpr) as total FROM transactions WHERE customer_id = ? AND type = ?',
       [customerId, TransactionType.credit.index],
     );
     final debit = (debitResult.first['total'] as num?)?.toDouble() ?? 0.0;
@@ -165,11 +187,11 @@ class DatabaseHelper {
   Future<Map<String, double>> getTotals() async {
     final db = await database;
     final debitResult = await db.rawQuery(
-      'SELECT SUM(amount) as total FROM transactions WHERE type = ?',
+      'SELECT SUM($_baseAmountExpr) as total FROM transactions WHERE type = ?',
       [TransactionType.debit.index],
     );
     final creditResult = await db.rawQuery(
-      'SELECT SUM(amount) as total FROM transactions WHERE type = ?',
+      'SELECT SUM($_baseAmountExpr) as total FROM transactions WHERE type = ?',
       [TransactionType.credit.index],
     );
     final totalDebit = (debitResult.first['total'] as num?)?.toDouble() ?? 0.0;
@@ -186,12 +208,66 @@ class DatabaseHelper {
     return db.rawQuery('''
       SELECT
         strftime('%Y-%m', date) as month,
-        SUM(CASE WHEN type = 1 THEN amount ELSE 0 END) as debit,
-        SUM(CASE WHEN type = 0 THEN amount ELSE 0 END) as credit
+        SUM(CASE WHEN type = 1 THEN $_baseAmountExpr ELSE 0 END) as debit,
+        SUM(CASE WHEN type = 0 THEN $_baseAmountExpr ELSE 0 END) as credit
       FROM transactions
       GROUP BY month
       ORDER BY month DESC
       LIMIT 6
     ''');
+  }
+
+  // ============ Backup / Restore / Clear ============
+
+  Future<Map<String, dynamic>> exportData() async {
+    final db = await database;
+    final customers = await db.query('customers');
+    final transactions = await db.query('transactions');
+    return {
+      'version': 2,
+      'exported_at': DateTime.now().toIso8601String(),
+      'customers': customers,
+      'transactions': transactions,
+    };
+  }
+
+  Future<void> importData(Map<String, dynamic> data) async {
+    final db = await database;
+    final batch = db.batch();
+    batch.delete('transactions');
+    batch.delete('customers');
+    for (final c in (data['customers'] as List? ?? [])) {
+      batch.insert('customers', Map<String, dynamic>.from(c));
+    }
+    for (final t in (data['transactions'] as List? ?? [])) {
+      batch.insert('transactions', Map<String, dynamic>.from(t));
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<void> clearAll() async {
+    final db = await database;
+    final batch = db.batch();
+    batch.delete('transactions');
+    batch.delete('customers');
+    await batch.commit(noResult: true);
+  }
+
+  /// عملاء عليهم ديون قديمة بعد عدد أيام محدد (للتذكيرات)
+  Future<List<Map<String, dynamic>>> getOverdueDebtors(int daysThreshold) async {
+    final db = await database;
+    final threshold = DateTime.now()
+        .subtract(Duration(days: daysThreshold))
+        .toIso8601String();
+    return db.rawQuery('''
+      SELECT c.id, c.name, c.phone,
+        SUM(CASE WHEN t.type = 1 THEN $_baseAmountExpr ELSE -($_baseAmountExpr) END) as balance,
+        MAX(t.date) as last_date
+      FROM customers c
+      JOIN transactions t ON t.customer_id = c.id
+      GROUP BY c.id
+      HAVING balance > 0 AND MAX(t.date) < ?
+      ORDER BY balance DESC
+    ''', [threshold]);
   }
 }

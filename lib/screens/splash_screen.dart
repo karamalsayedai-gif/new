@@ -3,7 +3,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/customer_provider.dart';
+import '../utils/app_lock.dart';
 import 'home_screen.dart';
+import 'pin_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,18 +23,33 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initialize() async {
     await context.read<CustomerProvider>().loadCustomers();
+    final pinEnabled = await AppLock.isPinEnabled();
     await Future.delayed(const Duration(milliseconds: 2200));
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const HomeScreen(),
-          transitionsBuilder: (_, animation, __, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 600),
+    if (!mounted) return;
+
+    if (pinEnabled) {
+      // قفل كامل الشاشة فوق الـ Splash، لا يمكن تجاوزه إلا بالرمز الصحيح.
+      final unlocked = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => const PinScreen(mode: PinMode.unlock),
         ),
       );
+      if (unlocked == true && mounted) _goHome();
+    } else {
+      _goHome();
     }
+  }
+
+  void _goHome() {
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const HomeScreen(),
+        transitionsBuilder: (_, animation, __, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 600),
+      ),
+    );
   }
 
   @override

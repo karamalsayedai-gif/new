@@ -31,6 +31,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     'FFF57F17',
   ];
   String _selectedColor = 'FF1E3A5F';
+  CustomerCategory _category = CustomerCategory.individual;
 
   bool get _isEditing => widget.customer != null;
 
@@ -44,6 +45,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     _notesController =
         TextEditingController(text: widget.customer?.notes ?? '');
     _selectedColor = widget.customer?.avatarColor ?? _avatarColors.first;
+    _category = widget.customer?.category ?? CustomerCategory.individual;
   }
 
   @override
@@ -160,7 +162,63 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                 prefixIcon: Icon(Icons.phone_outlined),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            // Category
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'فئة العميل',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: CustomerCategory.values.map((cat) {
+                final isSelected = _category == cat;
+                return GestureDetector(
+                  onTap: () => setState(() => _category = cat),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : Colors.transparent,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(cat.emoji,
+                            style: const TextStyle(fontSize: 16)),
+                        const SizedBox(width: 6),
+                        Text(
+                          cat.label,
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
             // Notes
             TextFormField(
               controller: _notesController,
@@ -215,6 +273,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           ? null
           : _notesController.text.trim(),
       avatarColor: _selectedColor,
+      category: _category,
+      createdAt: widget.customer?.createdAt,
     );
 
     final provider = context.read<CustomerProvider>();

@@ -12,12 +12,14 @@ class CustomerProvider extends ChangeNotifier {
   Map<String, double> _totals = {};
   bool _isLoading = false;
   String _searchQuery = '';
+  CustomerCategory? _categoryFilter;
 
   List<Customer> get customers => _filteredCustomers;
   Map<int, double> get balances => _balances;
   Map<String, double> get totals => _totals;
   bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
+  CustomerCategory? get categoryFilter => _categoryFilter;
 
   double getBalance(int customerId) => _balances[customerId] ?? 0.0;
 
@@ -47,19 +49,24 @@ class CustomerProvider extends ChangeNotifier {
   }
 
   void _applyFilter() {
-    if (_searchQuery.isEmpty) {
-      _filteredCustomers = List.from(_customers);
-    } else {
-      _filteredCustomers = _customers
-          .where((c) =>
-              c.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              (c.phone?.contains(_searchQuery) ?? false))
-          .toList();
-    }
+    _filteredCustomers = _customers.where((c) {
+      final matchesSearch = _searchQuery.isEmpty ||
+          c.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          (c.phone?.contains(_searchQuery) ?? false);
+      final matchesCategory =
+          _categoryFilter == null || c.category == _categoryFilter;
+      return matchesSearch && matchesCategory;
+    }).toList();
   }
 
   void search(String query) {
     _searchQuery = query;
+    _applyFilter();
+    notifyListeners();
+  }
+
+  void setCategoryFilter(CustomerCategory? category) {
+    _categoryFilter = category;
     _applyFilter();
     notifyListeners();
   }
@@ -96,6 +103,15 @@ class CustomerProvider extends ChangeNotifier {
   Future<void> refreshBalance(int customerId) async {
     _balances[customerId] = await _db.getCustomerBalance(customerId);
     await _loadTotals();
+    notifyListeners();
+  }
+
+  Future<void> clearAll() async {
+    await _db.clearAll();
+    _customers.clear();
+    _balances.clear();
+    await _loadTotals();
+    _applyFilter();
     notifyListeners();
   }
 

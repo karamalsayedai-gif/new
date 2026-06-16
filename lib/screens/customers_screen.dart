@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/app_theme.dart';
+import '../models/customer.dart';
 import '../providers/customer_provider.dart';
 import '../widgets/customer_card.dart';
 import 'customer_detail_screen.dart';
@@ -70,38 +71,123 @@ class _CustomersScreenState extends State<CustomersScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (provider.customers.isEmpty) {
-            return _buildEmptyState(context, provider.searchQuery.isNotEmpty);
-          }
-
-          return RefreshIndicator(
-            onRefresh: provider.loadCustomers,
-            child: ListView.builder(
-              padding: const EdgeInsets.only(top: 8, bottom: 100),
-              itemCount: provider.customers.length,
-              itemBuilder: (_, i) {
-                final customer = provider.customers[i];
-                return CustomerCard(
-                  customer: customer,
-                  balance: provider.getBalance(customer.id!),
-                  onTap: () => _openCustomer(context, customer.id!),
-                  onLongPress: () => _showOptions(context, customer.id!),
-                )
-                    .animate(delay: (i * 50).ms)
-                    .slideX(
-                      begin: -0.05,
-                      duration: 300.ms,
-                      curve: Curves.easeOut,
-                    )
-                    .fade(duration: 300.ms);
-              },
-            ),
+          return Column(
+            children: [
+              _buildCategoryFilter(context, provider),
+              Expanded(
+                child: provider.customers.isEmpty
+                    ? _buildEmptyState(
+                        context,
+                        provider.searchQuery.isNotEmpty ||
+                            provider.categoryFilter != null)
+                    : RefreshIndicator(
+                        onRefresh: provider.loadCustomers,
+                        child: ListView.builder(
+                          padding:
+                              const EdgeInsets.only(top: 8, bottom: 100),
+                          itemCount: provider.customers.length,
+                          itemBuilder: (_, i) {
+                            final customer = provider.customers[i];
+                            return CustomerCard(
+                              customer: customer,
+                              balance: provider.getBalance(customer.id!),
+                              onTap: () =>
+                                  _openCustomer(context, customer.id!),
+                              onLongPress: () =>
+                                  _showOptions(context, customer.id!),
+                            )
+                                .animate(delay: (i * 50).ms)
+                                .slideX(
+                                  begin: -0.05,
+                                  duration: 300.ms,
+                                  curve: Curves.easeOut,
+                                )
+                                .fade(duration: 300.ms);
+                          },
+                        ),
+                      ),
+              ),
+            ],
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addCustomer(context),
         child: const Icon(Icons.person_add_rounded),
+      ),
+    );
+  }
+
+  Widget _buildCategoryFilter(
+      BuildContext context, CustomerProvider provider) {
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        children: [
+          _filterChip(
+            context,
+            label: 'الكل',
+            emoji: '👥',
+            isSelected: provider.categoryFilter == null,
+            onTap: () => provider.setCategoryFilter(null),
+          ),
+          ...CustomerCategory.values.map((cat) {
+            return _filterChip(
+              context,
+              label: cat.label,
+              emoji: cat.emoji,
+              isSelected: provider.categoryFilter == cat,
+              onTap: () => provider.setCategoryFilter(cat),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _filterChip(
+    BuildContext context, {
+    required String label,
+    required String emoji,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary
+                : AppColors.primary.withOpacity(0.06),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.primary.withOpacity(0.15),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

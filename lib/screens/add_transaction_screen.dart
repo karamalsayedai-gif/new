@@ -1,10 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../models/customer.dart';
 import '../models/transaction.dart';
 import '../providers/transaction_provider.dart';
+import '../utils/currencies.dart';
+import '../utils/image_storage.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final Customer customer;
@@ -26,17 +30,23 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _amountController;
   late final TextEditingController _noteController;
+  late final TextEditingController _rateController;
   late TransactionType _type;
   late DateTime _selectedDate;
+  late String _currency;
+  String? _imagePath;
   bool _isLoading = false;
 
   bool get _isEditing => widget.transaction != null;
+  bool get _isForeignCurrency => !Currencies.isBase(_currency);
 
   @override
   void initState() {
     super.initState();
     _type = widget.initialType;
     _selectedDate = widget.transaction?.date ?? DateTime.now();
+    _currency = widget.transaction?.currency ?? Currencies.base;
+    _imagePath = widget.transaction?.imagePath;
     _amountController = TextEditingController(
       text: widget.transaction != null
           ? widget.transaction!.amount.toString()
@@ -45,12 +55,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     _noteController = TextEditingController(
       text: widget.transaction?.note ?? '',
     );
+    _rateController = TextEditingController(
+      text: widget.transaction?.exchangeRate?.toString() ??
+          (_isForeignCurrency
+              ? Currencies.byCode(_currency).defaultRate.toString()
+              : ''),
+    );
   }
 
   @override
   void dispose() {
     _amountController.dispose();
     _noteController.dispose();
+    _rateController.dispose();
     super.dispose();
   }
 
@@ -160,12 +177,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Amount
-            Text(
-              'المبلغ',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+            // Amount + Currency
+            Row(
+              children: [
+                Text(
+                  'المبلغ',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+                const Spacer(),
+                _buildCurrencyDropdown(),
+              ],
             ),
             const SizedBox(height: 8),
             TextFormField(
@@ -178,6 +201,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 fontWeight: FontWeight.w700,
                 color: color,
               ),
+              onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: '0.00',
                 hintStyle: TextStyle(
@@ -185,7 +209,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   fontWeight: FontWeight.w700,
                   color: AppColors.textHint,
                 ),
-                suffixText: 'ج.م',
+                suffixText: _currency,
                 suffixStyle: TextStyle(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w600,
@@ -212,6 +236,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 return null;
               },
             ),
+            if (_isForeignCurrency) ...[
+              const SizedBox(height: 12),
+              _buildExchangeRateField(),
+            ],
             const SizedBox(height: 20),
 
             // Quick amounts
@@ -280,6 +308,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 alignLabelWithHint: true,
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Receipt Image
+            Text(
+              'صورة الإيصال (اختياري)',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            _buildImageSection(color, bgColor),
             const SizedBox(height: 32),
 
             // Save Button
@@ -314,6 +353,218 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
+  Widget _buildCurrencyDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _currency,
+          isDense: true,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded,
+              color: AppColors.primary, size: 18),
+          style: const TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+          items: Currencies.all.map((c) {
+            return DropdownMenuItem(
+              value: c.code,
+              child: Text('${c.code} · ${c.name}'),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() {
+              _currency = value;
+              if (_isForeignCurrency) {
+                _rateController.text =
+                    Currencies.byCode(value).defaultRate.toString();
+              }
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExchangeRateField() {
+    final amount = double.tryParse(_amountController.text) ?? 0;
+    final rate = double.tryParse(_rateController.text) ?? 0;
+    final converted = amount * rate;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.accentLight.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.currency_exchange_rounded,
+                  color: AppColors.accentDark, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'سعر الصرف (1 $_currency =)',
+                style: const TextStyle(
+                    color: AppColors.accentDark,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: 90,
+                child: TextFormField(
+                  controller: _rateController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  textAlign: TextAlign.center,
+                  onChanged: (_) => setState(() {}),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 14),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 8),
+                    suffixText: Currencies.base,
+                    suffixStyle: const TextStyle(fontSize: 11),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (converted > 0) ...[
+            const SizedBox(height: 8),
+            Text(
+              '= ${converted.toStringAsFixed(2)} ${Currencies.base}',
+              style: const TextStyle(
+                color: AppColors.accentDark,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImageSection(Color color, Color bgColor) {
+    if (_imagePath != null && File(_imagePath!).existsSync()) {
+      return Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.file(
+              File(_imagePath!),
+              width: double.infinity,
+              height: 180,
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            top: 8,
+            left: 8,
+            child: GestureDetector(
+              onTap: () => setState(() => _imagePath = null),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(Icons.close_rounded,
+                    color: Colors.white, size: 18),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: _attachButton(
+            icon: Icons.camera_alt_rounded,
+            label: 'كاميرا',
+            color: color,
+            bgColor: bgColor,
+            onTap: () => _pickImage(ImageSource.camera),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _attachButton(
+            icon: Icons.photo_library_rounded,
+            label: 'المعرض',
+            color: color,
+            bgColor: bgColor,
+            onTap: () => _pickImage(ImageSource.gallery),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _attachButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.25)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                  color: color, fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final path = await ImageStorage.pickAndSave(source);
+      if (path != null && mounted) {
+        setState(() => _imagePath = path);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذّر إرفاق الصورة')),
+        );
+      }
+    }
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -333,16 +584,24 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     setState(() => _isLoading = true);
 
     final amount = double.parse(_amountController.text);
+    final rate = _isForeignCurrency
+        ? (double.tryParse(_rateController.text) ??
+            Currencies.byCode(_currency).defaultRate)
+        : null;
 
     final transaction = Transaction(
       id: widget.transaction?.id,
       customerId: widget.customer.id!,
       type: _type,
       amount: amount,
+      currency: _currency,
+      exchangeRate: rate,
       note: _noteController.text.trim().isEmpty
           ? null
           : _noteController.text.trim(),
+      imagePath: _imagePath,
       date: _selectedDate,
+      createdAt: widget.transaction?.createdAt,
     );
 
     final provider = context.read<TransactionProvider>();

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,6 +10,8 @@ import '../models/customer.dart';
 import '../models/transaction.dart';
 import '../widgets/transaction_tile.dart';
 import '../utils/formatters.dart';
+import '../utils/whatsapp_helper.dart';
+import '../utils/pdf_generator.dart';
 import 'add_transaction_screen.dart';
 import 'add_customer_screen.dart';
 
@@ -106,6 +109,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         transaction: tx,
                         onDelete: () => _deleteTransaction(context, tx),
                         onEdit: () => _editTransaction(context, tx),
+                        onViewImage: (path) => _viewImage(context, path),
                       )
                           .animate(delay: (i * 40).ms)
                           .slideY(begin: 0.05, duration: 250.ms);
@@ -158,9 +162,50 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           onPressed: () => _editCustomer(context, customer),
           icon: const Icon(Icons.edit_rounded),
         ),
-        IconButton(
-          onPressed: () => _shareStatement(context, customer),
+        PopupMenuButton<String>(
           icon: const Icon(Icons.share_rounded),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+          onSelected: (value) {
+            switch (value) {
+              case 'whatsapp':
+                _sendWhatsapp(context, customer);
+                break;
+              case 'pdf':
+                _exportPdf(context, customer);
+                break;
+              case 'text':
+                _shareStatement(context, customer);
+                break;
+            }
+          },
+          itemBuilder: (_) => [
+            const PopupMenuItem(
+              value: 'whatsapp',
+              child: Row(children: [
+                Icon(Icons.chat_rounded, color: AppColors.credit, size: 20),
+                SizedBox(width: 10),
+                Text('إرسال عبر واتساب'),
+              ]),
+            ),
+            const PopupMenuItem(
+              value: 'pdf',
+              child: Row(children: [
+                Icon(Icons.picture_as_pdf_rounded,
+                    color: AppColors.debit, size: 20),
+                SizedBox(width: 10),
+                Text('تصدير PDF'),
+              ]),
+            ),
+            const PopupMenuItem(
+              value: 'text',
+              child: Row(children: [
+                Icon(Icons.share_outlined, size: 20),
+                SizedBox(width: 10),
+                Text('مشاركة كنص'),
+              ]),
+            ),
+          ],
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -289,11 +334,21 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: _ActionButton(
-              icon: Icons.share_rounded,
-              label: 'مشاركة',
+              icon: Icons.chat_rounded,
+              label: 'واتساب',
+              color: AppColors.credit,
+              bgColor: AppColors.creditLight,
+              onTap: () => _sendWhatsapp(context, customer),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _ActionButton(
+              icon: Icons.picture_as_pdf_rounded,
+              label: 'PDF',
               color: AppColors.accent,
               bgColor: AppColors.accentLight.withOpacity(0.2),
-              onTap: () => _shareStatement(context, customer),
+              onTap: () => _exportPdf(context, customer),
             ),
           ),
         ],
@@ -416,7 +471,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     ).then((_) => context.read<CustomerProvider>().loadCustomers());
   }
 
-  void _shareStatement(BuildContext context, Customer customer) {
+  String _buildStatementText(Customer customer) {
     final txProvider = context.read<TransactionProvider>();
     final balance =
         context.read<CustomerProvider>().getBalance(widget.customerId);
@@ -430,7 +485,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     for (final tx in txProvider.transactions) {
       final emoji = tx.isDebit ? '⬆️' : '⬇️';
       buffer.writeln(
-          '$emoji ${tx.typeLabel}: ${Formatters.currency(tx.amount)}  -  ${Formatters.date(tx.date)}');
+          '$emoji ${tx.typeLabel}: ${Formatters.currency(tx.amount, symbol: tx.currency)}  -  ${Formatters.date(tx.date)}');
       if (tx.note != null && tx.note!.isNotEmpty) {
         buffer.writeln('   📝 ${tx.note}');
       }
@@ -446,8 +501,81 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     }
     buffer.writeln('');
     buffer.writeln('تم الإرسال من تطبيق حساباتي');
+    return buffer.toString();
+  }
 
-    Share.share(buffer.toString());
+  void _shareStatement(BuildContext context, Customer customer) {
+    Share.share(_buildStatementText(customer));
+  }
+
+  Future<void> _sendWhatsapp(BuildContext context, Customer customer) async {
+    final number = customer.whatsappNumber;
+    if (number == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('لا يوجد رقم هاتف لهذا العميل. أضف رقماً أولاً.')),
+      );
+      return;
+    }
+    await WhatsappHelper.sendMessage(
+      number: number,
+      message: _buildStatementText(customer),
+      context: context,
+    );
+  }
+
+  Future<void> _exportPdf(BuildContext context, Customer customer) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(content: Text('جاري إنشاء ملف PDF...')),
+    );
+    try {
+      final txProvider = context.read<TransactionProvider>();
+      final balance =
+          context.read<CustomerProvider>().getBalance(widget.customerId);
+      final bytes = await PdfGenerator.customerStatement(
+        customer: customer,
+        transactions: txProvider.transactions,
+        balance: balance,
+      );
+      final safeName = customer.name.replaceAll(RegExp(r'\s+'), '_');
+      await PdfGenerator.printDocument(bytes, 'كشف_حساب_$safeName');
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('تعذّر إنشاء الـ PDF: $e')),
+      );
+    }
+  }
+
+  void _viewImage(BuildContext context, String path) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: Stack(
+          alignment: Alignment.topLeft,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: InteractiveViewer(
+                child: Image.file(File(path)),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: CircleAvatar(
+                backgroundColor: Colors.black54,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

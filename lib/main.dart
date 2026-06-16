@@ -6,10 +6,12 @@ import 'theme/app_theme.dart';
 import 'providers/customer_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'screens/splash_screen.dart';
+import 'utils/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ar', null);
+  await NotificationService().init();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
