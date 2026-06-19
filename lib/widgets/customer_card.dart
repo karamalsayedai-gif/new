@@ -37,7 +37,6 @@ class CustomerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isPositive = balance > 0;
-    final isNegative = balance < 0;
     final color = _avatarColor(context);
 
     return InkWell(

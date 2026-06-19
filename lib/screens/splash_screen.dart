@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/customer_provider.dart';
 import '../utils/app_lock.dart';
+import '../utils/auto_backup_service.dart';
 import 'home_screen.dart';
 import 'pin_screen.dart';
 
@@ -23,6 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initialize() async {
     await context.read<CustomerProvider>().loadCustomers();
+    unawaited(AutoBackupService.runIfDue());
     final pinEnabled = await AppLock.isPinEnabled();
     await Future.delayed(const Duration(milliseconds: 2200));
     if (!mounted) return;

@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
 import '../theme/app_theme.dart';
 import '../providers/customer_provider.dart';
 import '../utils/formatters.dart';
 import '../utils/app_lock.dart';
+import '../utils/auto_backup_service.dart';
 import '../utils/backup_helper.dart';
 import '../utils/notification_service.dart';
 import '../utils/pdf_generator.dart';
@@ -25,6 +28,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _canBiometric = false;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 9, minute: 0);
   int _reminderDays = 7;
+  bool _autoBackupEnabled = true;
+  DateTime? _lastAutoBackup;
 
   @override
   void initState() {
@@ -37,6 +42,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final pinOn = await AppLock.isPinEnabled();
     final bioOn = await AppLock.isBiometricEnabled();
     final canBio = await AppLock.canUseBiometrics();
+    final autoBackupOn = await AutoBackupService.isEnabled();
+    final lastBackup = await AutoBackupService.lastRunAt();
     setState(() {
       _currency = prefs.getString('currency') ?? 'ج.م';
       _notifications = prefs.getBool('notifications') ?? true;
@@ -48,6 +55,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         minute: prefs.getInt('reminder_minute') ?? 0,
       );
       _reminderDays = prefs.getInt('reminder_days') ?? 7;
+      _autoBackupEnabled = autoBackupOn;
+      _lastAutoBackup = lastBackup;
     });
   }
 
@@ -75,7 +84,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 iconColor: AppColors.primary,
                 title: 'اللغة',
                 subtitle: 'العربية',
-                onTap: () {},
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('العربية هي اللغة الوحيدة المتاحة حالياً')),
+                ),
               ),
             ],
           ),
@@ -148,10 +160,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             title: 'البيانات',
             children: [
+              _buildSwitchTile(
+                icon: Icons.cloud_sync_rounded,
+                iconColor: AppColors.primary,
+                title: 'النسخ الاحتياطي التلقائي',
+                subtitle: _lastAutoBackup == null
+                    ? 'لم يتم إنشاء نسخة بعد'
+                    : 'آخر نسخة: ${Formatters.relativeDate(_lastAutoBackup!)}',
+                value: _autoBackupEnabled,
+                onChanged: _toggleAutoBackup,
+              ),
+              _buildTile(
+                icon: Icons.history_rounded,
+                iconColor: AppColors.primary,
+                title: 'النسخ الاحتياطية التلقائية',
+                subtitle: 'استعراض واستعادة نسخة قديمة',
+                onTap: _showAutoBackups,
+              ),
               _buildTile(
                 icon: Icons.backup_rounded,
                 iconColor: AppColors.credit,
-                title: 'نسخ احتياطي',
+                title: 'نسخ احتياطي يدوي',
                 subtitle: 'حفظ نسخة من بياناتك (Drive/ملفات)',
                 onTap: _exportBackup,
               ),
@@ -203,7 +232,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 iconColor: AppColors.credit,
                 title: 'مشاركة التطبيق',
                 subtitle: 'شارك التطبيق مع أصدقائك',
-                onTap: () => _showComingSoon(context),
+                onTap: () => Share.share(
+                  'جرّب تطبيق حساباتي لإدارة حسابات عملائك وديونهم بسهولة وأمان 💰📱',
+                  subject: 'تطبيق حساباتي',
+                ),
               ),
             ],
           ),
@@ -322,6 +354,108 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // ============ Data ============
+
+  Future<void> _toggleAutoBackup(bool v) async {
+    await AutoBackupService.setEnabled(v);
+    setState(() => _autoBackupEnabled = v);
+    if (v) {
+      await AutoBackupService.runIfDue();
+      final last = await AutoBackupService.lastRunAt();
+      if (mounted) setState(() => _lastAutoBackup = last);
+    }
+  }
+
+  Future<void> _showAutoBackups() async {
+    final backups = await AutoBackupService.listBackups();
+    if (!mounted) return;
+
+    if (backups.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا توجد نسخ احتياطية تلقائية بعد')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('النسخ الاحتياطية التلقائية',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 360),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: backups.length,
+                  itemBuilder: (_, i) {
+                    final file = backups[i];
+                    final stat = file.statSync();
+                    return ListTile(
+                      leading: const Icon(Icons.description_rounded,
+                          color: AppColors.primary),
+                      title: Text(Formatters.dateTime(stat.modified)),
+                      trailing: const Icon(Icons.restore_rounded,
+                          color: AppColors.accent),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _restoreFromAutoBackup(file);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _restoreFromAutoBackup(File file) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('استعادة البيانات'),
+        content: const Text(
+            'سيتم استبدال جميع البيانات الحالية بمحتوى هذه النسخة الاحتياطية. متابعة؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('استعادة'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await AutoBackupService.restore(file);
+      if (mounted) {
+        await context.read<CustomerProvider>().loadCustomers();
+      }
+      messenger.showSnackBar(
+        const SnackBar(content: Text('تمت استعادة البيانات بنجاح')),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('فشل الاستعادة: $e')),
+      );
+    }
+  }
 
   Future<void> _exportBackup() async {
     final messenger = ScaffoldMessenger.of(context);
