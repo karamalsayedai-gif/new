@@ -49,3 +49,9 @@ def run(db: "Database", old_version: int, new_version: int) -> None:
                 "CREATE INDEX IF NOT EXISTS idx_purchase_items_purchase "
                 "ON purchase_items(purchase_id)"
             )
+
+        # v4 -> v5: خصم على فاتورة البيع.
+        if old_version < 5:
+            conn.execute(
+                "ALTER TABLE sales ADD COLUMN discount REAL NOT NULL DEFAULT 0"
+            )

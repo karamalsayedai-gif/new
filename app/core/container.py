@@ -11,6 +11,7 @@ from app.data.repositories.customers_repository import CustomersRepository
 from app.data.repositories.day_closing_repository import DayClosingRepository
 from app.data.repositories.inventory_repository import InventoryRepository
 from app.data.repositories.purchases_repository import PurchasesRepository
+from app.data.repositories.sales_repository import SalesRepository
 from app.data.repositories.settings_repository import SettingsRepository
 from app.data.repositories.suppliers_repository import SuppliersRepository
 from app.data.repositories.treasury_repository import TreasuryRepository
@@ -22,6 +23,7 @@ from app.services.customers_service import CustomersService
 from app.services.day_closing_service import DayClosingService
 from app.services.inventory_service import InventoryService
 from app.services.purchases_service import PurchasesService
+from app.services.sales_service import SalesService
 from app.services.settings_service import SettingsService
 from app.services.suppliers_service import SuppliersService
 from app.services.treasury_service import TreasuryService
@@ -42,6 +44,7 @@ class Container:
         self.suppliers_repo = SuppliersRepository(self.db)
         self.inventory_repo = InventoryRepository(self.db)
         self.purchases_repo = PurchasesRepository(self.db)
+        self.sales_repo = SalesRepository(self.db)
 
         # الخدمات
         self.audit = AuditService(self.db)
@@ -57,6 +60,9 @@ class Container:
         )
         self.purchases = PurchasesService(
             self.purchases_repo, self.day_closing, self.audit
+        )
+        self.sales = SalesService(
+            self.sales_repo, self.inventory_repo, self.day_closing, self.audit
         )
         self.backup = BackupService(self.db, self.settings, self.audit)
 

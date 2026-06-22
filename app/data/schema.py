@@ -179,6 +179,7 @@ CREATE_STATEMENTS: list[str] = [
         customer_id INTEGER,
         type        TEXT NOT NULL,
         total       REAL NOT NULL DEFAULT 0,
+        discount    REAL NOT NULL DEFAULT 0,
         paid        REAL NOT NULL DEFAULT 0,
         date        TEXT NOT NULL,
         day_id      INTEGER,

@@ -33,7 +33,7 @@ class AppConfig:
     APP_NAME_AR = "نظام إدارة معرض الدراجات النارية"
 
     # إصدار مخطط قاعدة البيانات — يُزاد عند أي تغيير في الجداول (Migrations).
-    DB_SCHEMA_VERSION = 4
+    DB_SCHEMA_VERSION = 5
 
     DEFAULT_THEME = "classic_business"
 

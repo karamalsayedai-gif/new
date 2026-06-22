@@ -189,6 +189,75 @@ class PurchaseItem:
 
 
 @dataclass
+class Sale:
+    id: int
+    customer_id: int | None
+    type: str
+    total: float
+    discount: float
+    paid: float
+    date: str
+    day_id: int | None = None
+    user_id: int | None = None
+    notes: str = ""
+    customer_name: str = ""
+
+    @property
+    def remaining(self) -> float:
+        return self.total - self.paid
+
+    @property
+    def payment_status(self) -> str:
+        if self.remaining <= 0:
+            return "مدفوعة"
+        if self.paid <= 0:
+            return "آجل"
+        return "جزئي"
+
+    @staticmethod
+    def from_row(row: Mapping) -> "Sale":
+        keys = row.keys()
+        return Sale(
+            id=row["id"],
+            customer_id=row["customer_id"],
+            type=row["type"],
+            total=row["total"] or 0.0,
+            discount=(row["discount"] if "discount" in keys else 0.0) or 0.0,
+            paid=row["paid"] or 0.0,
+            date=row["date"] or "",
+            day_id=row["day_id"],
+            user_id=row["user_id"],
+            notes=row["notes"] or "",
+            customer_name=row["customer_name"] if "customer_name" in keys else "",
+        )
+
+
+@dataclass
+class SaleItem:
+    id: int
+    sale_id: int
+    item_id: int | None
+    description: str
+    quantity: float
+    unit_price: float
+
+    @property
+    def line_total(self) -> float:
+        return self.quantity * self.unit_price
+
+    @staticmethod
+    def from_row(row: Mapping) -> "SaleItem":
+        return SaleItem(
+            id=row["id"],
+            sale_id=row["sale_id"],
+            item_id=row["item_id"],
+            description=row["description"],
+            quantity=row["quantity"] or 0.0,
+            unit_price=row["unit_price"] or 0.0,
+        )
+
+
+@dataclass
 class DayClosing:
     id: int
     business_date: str
