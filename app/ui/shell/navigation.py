@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Callable
 from PyQt6.QtWidgets import QWidget
 
 from app.core.constants.permissions import Permissions
+from app.ui.customers.customers_view import CustomersView
 from app.ui.day_closing.day_closing_view import DayClosingView
 from app.ui.modules.dashboard_view import DashboardView
 from app.ui.modules.placeholder_view import PlaceholderView
@@ -51,7 +52,7 @@ def build_nav_items() -> list[NavItem]:
         ),
         NavItem(
             "customers", "العملاء", Permissions.CUSTOMERS_VIEW,
-            _placeholder("العملاء"),
+            lambda c: CustomersView(c),
         ),
         NavItem(
             "sales", "المبيعات", Permissions.SALES_CASH_VIEW,
