@@ -31,13 +31,14 @@ python main.py
 ```
 أول تشغيل ينشئ قاعدة البيانات تلقائيًا ويطلب **إعدادًا أوّليًا** (اسم المعرض + حساب مدير).
 
-## التغليف (ويندوز)
-يُبنى عبر ملف الـ spec الجاهز من جذر المستودع:
-```bat
-pyinstaller packaging\showroom_erp.spec
-```
-ثم توليد مُثبّت عبر Inno Setup من `packaging\installer.iss`.
-التفاصيل الكاملة في `packaging/README.md`.
+## الإصدار
+**1.0.0-rc1** (Release Candidate — مكتمل الوحدات الأساسية، جاهز للتغليف والتشغيل).
+
+## التشغيل والبناء والتسليم
+- التشغيل المحلي: **`RUN.md`**
+- بناء تنفيذي ويندوز: **`BUILD.md`** (ملف البناء الرسمي: `packaging/showroom_erp.spec`)
+- التسليم والنشر: **`PACKAGE.md`**
+- المعمارية: `docs/ARCHITECTURE.md`
 
 ## القوالب
 4 قوالب جاهزة في `app/theme/themes/`: `classic_business`, `modern_dark`,

@@ -39,8 +39,10 @@ class NavItem:
     factory: Callable[["Container"], QWidget]
 
 
-def _placeholder(title: str) -> Callable[["Container"], QWidget]:
-    return lambda _c: PlaceholderView(title)
+def _placeholder(title: str, note: str | None = None) -> Callable[["Container"], QWidget]:
+    if note is None:
+        return lambda _c: PlaceholderView(title)
+    return lambda _c: PlaceholderView(title, note)
 
 
 def build_nav_items() -> list[NavItem]:
@@ -76,7 +78,12 @@ def build_nav_items() -> list[NavItem]:
         ),
         NavItem(
             "expenses", "المصروفات والإيرادات", Permissions.EXPENSES_VIEW,
-            _placeholder("المصروفات والإيرادات"),
+            _placeholder(
+                "المصروفات والإيرادات",
+                "تُسجَّل المصروفات والإيرادات حاليًا من شاشة «الخزينة» عبر أزرار "
+                "صرف/قبض بتصنيف مصروف أو إيراد.\nشاشة مخصّصة لتصنيفات المصروفات "
+                "والتقارير التفصيلية مُخطّطة كميزة مستقبلية.",
+            ),
         ),
         NavItem(
             "day_closing", "الإقفال اليومي", Permissions.DAY_CLOSE,
