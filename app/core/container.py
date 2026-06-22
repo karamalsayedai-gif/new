@@ -12,6 +12,7 @@ from app.data.repositories.day_closing_repository import DayClosingRepository
 from app.data.repositories.installments_repository import InstallmentsRepository
 from app.data.repositories.inventory_repository import InventoryRepository
 from app.data.repositories.purchases_repository import PurchasesRepository
+from app.data.repositories.reports_repository import ReportsRepository
 from app.data.repositories.sales_repository import SalesRepository
 from app.data.repositories.settings_repository import SettingsRepository
 from app.data.repositories.suppliers_repository import SuppliersRepository
@@ -25,6 +26,7 @@ from app.services.day_closing_service import DayClosingService
 from app.services.installments_service import InstallmentsService
 from app.services.inventory_service import InventoryService
 from app.services.purchases_service import PurchasesService
+from app.services.reports_service import ReportsService
 from app.services.sales_service import SalesService
 from app.services.settings_service import SettingsService
 from app.services.suppliers_service import SuppliersService
@@ -48,6 +50,7 @@ class Container:
         self.purchases_repo = PurchasesRepository(self.db)
         self.sales_repo = SalesRepository(self.db)
         self.installments_repo = InstallmentsRepository(self.db)
+        self.reports_repo = ReportsRepository(self.db)
 
         # الخدمات
         self.audit = AuditService(self.db)
@@ -70,6 +73,7 @@ class Container:
         self.installments = InstallmentsService(
             self.installments_repo, self.inventory_repo, self.day_closing, self.audit
         )
+        self.reports = ReportsService(self.reports_repo, self.installments_repo)
         self.backup = BackupService(self.db, self.settings, self.audit)
 
         # محرك القوالب يُهيّأ بعد إنشاء QApplication.

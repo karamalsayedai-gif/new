@@ -18,6 +18,7 @@ from app.ui.inventory.inventory_view import InventoryView
 from app.ui.modules.dashboard_view import DashboardView
 from app.ui.modules.placeholder_view import PlaceholderView
 from app.ui.purchases.purchases_view import PurchasesView
+from app.ui.reports.reports_view import ReportsView
 from app.ui.sales.sales_view import SalesView
 from app.ui.settings.settings_view import SettingsView
 from app.ui.suppliers.suppliers_view import SuppliersView
@@ -81,7 +82,7 @@ def build_nav_items() -> list[NavItem]:
         ),
         NavItem(
             "reports", "التقارير", Permissions.REPORTS_VIEW,
-            _placeholder("التقارير"),
+            lambda c: ReportsView(c),
         ),
         NavItem(
             "users", "المستخدمون", Permissions.USERS_VIEW, lambda c: UsersView(c)
