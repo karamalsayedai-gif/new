@@ -9,6 +9,7 @@ from app.config import AppConfig
 from app.data.database import Database
 from app.data.repositories.customers_repository import CustomersRepository
 from app.data.repositories.day_closing_repository import DayClosingRepository
+from app.data.repositories.installments_repository import InstallmentsRepository
 from app.data.repositories.inventory_repository import InventoryRepository
 from app.data.repositories.purchases_repository import PurchasesRepository
 from app.data.repositories.sales_repository import SalesRepository
@@ -21,6 +22,7 @@ from app.services.auth_service import AuthService
 from app.services.backup_service import BackupService
 from app.services.customers_service import CustomersService
 from app.services.day_closing_service import DayClosingService
+from app.services.installments_service import InstallmentsService
 from app.services.inventory_service import InventoryService
 from app.services.purchases_service import PurchasesService
 from app.services.sales_service import SalesService
@@ -45,6 +47,7 @@ class Container:
         self.inventory_repo = InventoryRepository(self.db)
         self.purchases_repo = PurchasesRepository(self.db)
         self.sales_repo = SalesRepository(self.db)
+        self.installments_repo = InstallmentsRepository(self.db)
 
         # الخدمات
         self.audit = AuditService(self.db)
@@ -63,6 +66,9 @@ class Container:
         )
         self.sales = SalesService(
             self.sales_repo, self.inventory_repo, self.day_closing, self.audit
+        )
+        self.installments = InstallmentsService(
+            self.installments_repo, self.inventory_repo, self.day_closing, self.audit
         )
         self.backup = BackupService(self.db, self.settings, self.audit)
 

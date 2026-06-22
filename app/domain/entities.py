@@ -258,6 +258,86 @@ class SaleItem:
 
 
 @dataclass
+class InstallmentPlan:
+    id: int
+    sale_id: int
+    down_payment: float
+    months: int
+    interest_pct: float
+    total_amount: float
+    status: str
+    customer_id: int | None = None
+    customer_name: str = ""
+    sale_total: float = 0.0
+    sale_date: str = ""
+
+    @staticmethod
+    def from_row(row: Mapping) -> "InstallmentPlan":
+        keys = row.keys()
+        return InstallmentPlan(
+            id=row["id"],
+            sale_id=row["sale_id"],
+            down_payment=row["down_payment"] or 0.0,
+            months=row["months"] or 0,
+            interest_pct=row["interest_pct"] or 0.0,
+            total_amount=row["total_amount"] or 0.0,
+            status=row["status"],
+            customer_id=row["customer_id"] if "customer_id" in keys else None,
+            customer_name=row["customer_name"] if "customer_name" in keys else "",
+            sale_total=(row["sale_total"] if "sale_total" in keys else 0.0) or 0.0,
+            sale_date=row["sale_date"] if "sale_date" in keys else "",
+        )
+
+
+@dataclass
+class Installment:
+    id: int
+    plan_id: int
+    number: int
+    due_date: str
+    amount: float
+    principal: float
+    interest: float
+    paid_amount: float
+    paid_at: str | None
+    status: str
+
+    @property
+    def remaining(self) -> float:
+        return max(self.amount - self.paid_amount, 0.0)
+
+    def is_overdue(self, today: str) -> bool:
+        return self.remaining > 0 and self.due_date < today
+
+    def days_late(self, today: str) -> int:
+        if self.remaining <= 0:
+            return 0
+        from datetime import date as _d
+
+        try:
+            due = _d.fromisoformat(self.due_date)
+            now = _d.fromisoformat(today)
+        except (ValueError, TypeError):
+            return 0
+        return max((now - due).days, 0)
+
+    @staticmethod
+    def from_row(row: Mapping) -> "Installment":
+        return Installment(
+            id=row["id"],
+            plan_id=row["plan_id"],
+            number=row["number"] or 0,
+            due_date=row["due_date"] or "",
+            amount=row["amount"] or 0.0,
+            principal=row["principal"] or 0.0,
+            interest=row["interest"] or 0.0,
+            paid_amount=row["paid_amount"] or 0.0,
+            paid_at=row["paid_at"],
+            status=row["status"],
+        )
+
+
+@dataclass
 class DayClosing:
     id: int
     business_date: str

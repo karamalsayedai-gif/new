@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import QWidget
 from app.core.constants.permissions import Permissions
 from app.ui.customers.customers_view import CustomersView
 from app.ui.day_closing.day_closing_view import DayClosingView
+from app.ui.installments.installments_view import InstallmentsView
 from app.ui.inventory.inventory_view import InventoryView
 from app.ui.modules.dashboard_view import DashboardView
 from app.ui.modules.placeholder_view import PlaceholderView
@@ -64,7 +65,7 @@ def build_nav_items() -> list[NavItem]:
         ),
         NavItem(
             "installments", "التقسيط", Permissions.SALES_INSTALLMENT_VIEW,
-            _placeholder("مبيعات التقسيط"),
+            lambda c: InstallmentsView(c),
         ),
         NavItem(
             "treasury", "الخزينة", Permissions.TREASURY_VIEW,

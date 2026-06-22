@@ -55,3 +55,15 @@ def run(db: "Database", old_version: int, new_version: int) -> None:
             conn.execute(
                 "ALTER TABLE sales ADD COLUMN discount REAL NOT NULL DEFAULT 0"
             )
+
+        # v5 -> v6: رقم القسط + فصل الأصل/الفائدة لكل قسط.
+        if old_version < 6:
+            conn.execute(
+                "ALTER TABLE installments ADD COLUMN number INTEGER NOT NULL DEFAULT 0"
+            )
+            conn.execute(
+                "ALTER TABLE installments ADD COLUMN principal REAL NOT NULL DEFAULT 0"
+            )
+            conn.execute(
+                "ALTER TABLE installments ADD COLUMN interest REAL NOT NULL DEFAULT 0"
+            )

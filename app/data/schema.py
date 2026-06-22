@@ -220,8 +220,11 @@ CREATE_STATEMENTS: list[str] = [
     CREATE TABLE installments (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         plan_id     INTEGER NOT NULL,
+        number      INTEGER NOT NULL DEFAULT 0,
         due_date    TEXT NOT NULL,
         amount      REAL NOT NULL DEFAULT 0,
+        principal   REAL NOT NULL DEFAULT 0,
+        interest    REAL NOT NULL DEFAULT 0,
         paid_amount REAL NOT NULL DEFAULT 0,
         paid_at     TEXT,
         status      TEXT NOT NULL DEFAULT 'pending',

@@ -41,8 +41,14 @@ class DayStatus(StrEnum):
 
 class InstallmentStatus(StrEnum):
     PENDING = "pending"
+    PARTIAL = "partial"
     PAID = "paid"
-    LATE = "late"
+
+
+class PlanStatus(StrEnum):
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    DEFAULTED = "defaulted"
 
 
 class ItemStatus(StrEnum):
