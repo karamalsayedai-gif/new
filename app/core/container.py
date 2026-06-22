@@ -13,6 +13,7 @@ from app.data.repositories.installments_repository import InstallmentsRepository
 from app.data.repositories.inventory_repository import InventoryRepository
 from app.data.repositories.purchases_repository import PurchasesRepository
 from app.data.repositories.reports_repository import ReportsRepository
+from app.data.repositories.returns_repository import ReturnsRepository
 from app.data.repositories.sales_repository import SalesRepository
 from app.data.repositories.settings_repository import SettingsRepository
 from app.data.repositories.suppliers_repository import SuppliersRepository
@@ -27,6 +28,7 @@ from app.services.installments_service import InstallmentsService
 from app.services.inventory_service import InventoryService
 from app.services.purchases_service import PurchasesService
 from app.services.reports_service import ReportsService
+from app.services.returns_service import ReturnsService
 from app.services.sales_service import SalesService
 from app.services.settings_service import SettingsService
 from app.services.suppliers_service import SuppliersService
@@ -51,6 +53,7 @@ class Container:
         self.sales_repo = SalesRepository(self.db)
         self.installments_repo = InstallmentsRepository(self.db)
         self.reports_repo = ReportsRepository(self.db)
+        self.returns_repo = ReturnsRepository(self.db)
 
         # الخدمات
         self.audit = AuditService(self.db)
@@ -76,6 +79,10 @@ class Container:
             self.audit, self.settings,
         )
         self.reports = ReportsService(self.reports_repo, self.installments_repo)
+        self.returns = ReturnsService(
+            self.returns_repo, self.sales_repo, self.purchases_repo,
+            self.day_closing, self.audit,
+        )
         self.backup = BackupService(self.db, self.settings, self.audit)
 
         # محرك القوالب يُهيّأ بعد إنشاء QApplication.

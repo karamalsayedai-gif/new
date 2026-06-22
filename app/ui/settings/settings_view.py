@@ -41,11 +41,36 @@ class SettingsView(QWidget):
 
         layout.addWidget(self._company_card())
         layout.addWidget(self._theme_card())
+        layout.addWidget(self._print_card())
         layout.addWidget(self._security_card())
         layout.addWidget(
             muted_label("النسخ الاحتياطي والاستعادة في وحدة «النسخ الاحتياطي» المستقلة.")
         )
         layout.addStretch(1)
+
+    # ── قالب الطباعة ────────────────────────────────────────────────────
+    def _print_card(self) -> Card:
+        card = Card()
+        lay = card.layout()
+        lay.addWidget(heading_label("قالب الطباعة"))
+        s = self._c.settings
+        self._print_header = QLineEdit(s.get(SettingKeys.PRINT_HEADER))
+        self._print_header.setPlaceholderText("سطر ترويسة إضافي (اختياري)")
+        self._print_footer = QLineEdit(s.get(SettingKeys.PRINT_FOOTER))
+        lay.addWidget(QLabel("سطر الترويسة"))
+        lay.addWidget(self._print_header)
+        lay.addWidget(QLabel("سطر التذييل"))
+        lay.addWidget(self._print_footer)
+        save = QPushButton("حفظ قالب الطباعة")
+        save.setEnabled(self._c.auth.can(Permissions.SETTINGS_MANAGE))
+        save.clicked.connect(self._save_print)
+        lay.addWidget(save)
+        return card
+
+    def _save_print(self) -> None:
+        self._c.settings.set(SettingKeys.PRINT_HEADER, self._print_header.text().strip())
+        self._c.settings.set(SettingKeys.PRINT_FOOTER, self._print_footer.text().strip())
+        QMessageBox.information(self, "تم", "تم حفظ قالب الطباعة.")
 
     # ── الأمان وترقيم الفواتير ──────────────────────────────────────────
     def _security_card(self) -> Card:

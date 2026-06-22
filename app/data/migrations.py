@@ -84,3 +84,15 @@ def run(db: "Database", old_version: int, new_version: int) -> None:
             )
             conn.execute("ALTER TABLE sales ADD COLUMN invoice_no TEXT")
             conn.execute("ALTER TABLE purchases ADD COLUMN invoice_no TEXT")
+
+        # v8 -> v9: مرتجعات البيع والشراء.
+        if old_version < 9:
+            conn.execute(schema.RETURNS_DDL)
+            conn.execute(schema.RETURN_ITEMS_DDL)
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_return_items_return "
+                "ON return_items(return_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_returns_ref ON returns(type, ref_id)"
+            )

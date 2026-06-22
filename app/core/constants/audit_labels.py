@@ -26,6 +26,8 @@ ACTION_LABELS: dict[str, str] = {
     "stock_adjust": "حركة مخزون",
     "purchase_create": "ترحيل فاتورة شراء",
     "purchase_delete": "حذف فاتورة شراء",
+    "sale_return": "مرتجع مبيعات",
+    "purchase_return": "مرتجع مشتريات",
     "sale_create": "ترحيل فاتورة بيع",
     "sale_delete": "حذف فاتورة بيع",
     "installment_create": "إنشاء عقد تقسيط",
@@ -48,6 +50,7 @@ ENTITY_LABELS: dict[str, str] = {
     "purchases": "المشتريات",
     "sales": "المبيعات",
     "installment_plans": "التقسيط",
+    "returns": "المرتجعات",
     "treasury": "الخزينة",
     "day_closings": "الإقفال اليومي",
 }
@@ -71,6 +74,8 @@ def operation_category(code: str) -> str:
         return "تعديل"
     if code.endswith("_delete"):
         return "حذف"
+    if code in ("sale_return","purchase_return"):
+        return "مرتجع"
     if code == "installment_collect":
         return "تحصيل"
     if code == "backup_restore":
@@ -95,7 +100,7 @@ def operation_category(code: str) -> str:
 
 # قائمة التصنيفات العامة لاستخدامها في فلتر العملية.
 OPERATION_CATEGORIES = [
-    "إضافة", "تعديل", "حذف", "تحصيل", "حركة خزينة", "حركة مخزون",
+    "إضافة", "تعديل", "حذف", "تحصيل", "مرتجع", "حركة خزينة", "حركة مخزون",
     "إقفال يوم", "إعادة فتح", "نسخ احتياطي", "استعادة", "دخول/خروج",
     "إدارة مستخدمين", "أخرى",
 ]

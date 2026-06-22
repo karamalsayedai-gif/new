@@ -54,6 +54,13 @@ class ReportsRepository(BaseRepository):
             (dfrom, dto),
         )
 
+    def sales_daily(self, dfrom: str, dto: str):
+        return self.db.query(
+            "SELECT date, COALESCE(SUM(total),0) AS total FROM sales "
+            "WHERE type='cash' AND date BETWEEN ? AND ? GROUP BY date ORDER BY date",
+            (dfrom, dto),
+        )
+
     def all_sales_discounts(self, dfrom: str, dto: str) -> float:
         row = self.db.query_one(
             "SELECT COALESCE(SUM(discount),0) AS d FROM sales "

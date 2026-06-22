@@ -67,6 +67,19 @@ class TreasuryRepository(BaseRepository):
             (day_id,),
         )
 
+    def list_income_expense(self, dfrom: str, dto: str):
+        """حركات الإيراد/المصروف ضمن نطاق تاريخ (للشاشة المخصّصة)."""
+        return self.db.query(
+            """
+            SELECT t.*, u.username
+            FROM treasury t LEFT JOIN users u ON u.id = t.user_id
+            WHERE t.category IN ('income','expense')
+              AND substr(t.date,1,10) BETWEEN ? AND ?
+            ORDER BY t.id DESC
+            """,
+            (dfrom, dto),
+        )
+
     def list_recent(self, limit: int = 200):
         return self.db.query(
             """

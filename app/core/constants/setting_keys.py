@@ -33,6 +33,11 @@ class SettingKeys:
     SALES_NO_PREFIX = "sales_no_prefix"
     PURCHASE_NO_PREFIX = "purchase_no_prefix"
 
+    # قالب الطباعة القابل للتخصيص
+    PRINT_HEADER = "print_header"
+    PRINT_FOOTER = "print_footer"
+    PRINT_SHOW_CONTACT = "print_show_contact"
+
     # حالة الإعداد لأول مرة
     SETUP_COMPLETED = "setup_completed"
 
@@ -52,5 +57,8 @@ class SettingKeys:
         LOGIN_LOCKOUT_MINUTES: ("15", "int"),
         SALES_NO_PREFIX: ("ف-", "string"),
         PURCHASE_NO_PREFIX: ("ش-", "string"),
+        PRINT_HEADER: ("", "string"),
+        PRINT_FOOTER: ("شكرًا لتعاملكم معنا", "string"),
+        PRINT_SHOW_CONTACT: ("true", "bool"),
         SETUP_COMPLETED: ("false", "bool"),
     }

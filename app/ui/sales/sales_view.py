@@ -32,7 +32,7 @@ from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
 from app.services.sales_service import SalesServiceError
 from app.ui.components.page import Page
-from app.ui.components.printing import print_html
+from app.ui.components.printing import build_invoice_html, print_html
 from app.ui.components.widgets import Card, StatCard, heading_label, title_label
 
 if TYPE_CHECKING:
@@ -337,6 +337,11 @@ class SaleDetailPage(Page):
 
         printb = QPushButton("طباعة")
         printb.clicked.connect(self._print)
+        ret = QPushButton("مرتجع")
+        ret.setObjectName("Ghost")
+        ret.setEnabled(container.auth.can(Permissions.SALES_CASH_CREATE))
+        ret.clicked.connect(self._return)
+        self.add_action(ret)
         self.add_action(printb)
 
         self._stats = QHBoxLayout()
@@ -394,6 +399,10 @@ class SaleDetailPage(Page):
                 r, 3, QTableWidgetItem(format_currency(it.line_total, symbol))
             )
 
+    def _return(self) -> None:
+        from app.ui.returns.returns_view import SaleReturnPage
+        self._c.navigator.push(SaleReturnPage(self._c, self._sale_id))
+
     def _print(self) -> None:
         sale = self._c.sales.get(self._sale_id)
         symbol = self._c.settings.currency_symbol
@@ -405,7 +414,6 @@ class SaleDetailPage(Page):
             for it in items
         )
         html = (
-            f"<h2>{self._c.settings.showroom_name} — فاتورة بيع {sale.display_no}</h2>"
             f"<p>العميل: {sale.customer_name or 'نقدي'} | التاريخ: "
             f"{format_iso_date(sale.date)}</p>"
             "<table><tr><th>الصنف</th><th>الكمية</th><th>السعر</th>"
@@ -416,4 +424,4 @@ class SaleDetailPage(Page):
             f"المتبقّي: {format_currency(sale.remaining, symbol)} "
             f"({sale.payment_status})</p>"
         )
-        print_html(self, html, "طباعة فاتورة بيع")
+        print_html(self, build_invoice_html(self._c, f"فاتورة بيع {sale.display_no}", html), "طباعة فاتورة بيع")

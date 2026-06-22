@@ -36,6 +36,37 @@ PURCHASE_ITEMS_DDL = """
     );
 """
 
+# المرتجعات (بيع/شراء) — معرّفة منفصلة لإعادة استخدامها في الترقية.
+RETURNS_DDL = """
+    CREATE TABLE returns (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        type       TEXT NOT NULL,            -- sale | purchase
+        ref_id     INTEGER NOT NULL,         -- معرّف الفاتورة الأصلية
+        invoice_no TEXT,
+        total      REAL NOT NULL DEFAULT 0,
+        refund     REAL NOT NULL DEFAULT 0,  -- المبلغ المُعاد نقدًا
+        date       TEXT NOT NULL,
+        day_id     INTEGER,
+        user_id    INTEGER,
+        notes      TEXT,
+        FOREIGN KEY (day_id) REFERENCES day_closings(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+"""
+
+RETURN_ITEMS_DDL = """
+    CREATE TABLE return_items (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        return_id   INTEGER NOT NULL,
+        item_id     INTEGER,
+        description TEXT NOT NULL,
+        quantity    REAL NOT NULL DEFAULT 1,
+        unit_price  REAL NOT NULL DEFAULT 0,
+        FOREIGN KEY (return_id) REFERENCES returns(id) ON DELETE CASCADE,
+        FOREIGN KEY (item_id) REFERENCES inventory_items(id)
+    );
+"""
+
 CREATE_STATEMENTS: list[str] = [
     # ── الأمن والصلاحيات ────────────────────────────────────────────────
     """
@@ -168,6 +199,8 @@ CREATE_STATEMENTS: list[str] = [
     );
     """,
     PURCHASE_ITEMS_DDL,
+    RETURNS_DDL,
+    RETURN_ITEMS_DDL,
     # ── العملاء ─────────────────────────────────────────────────────────
     """
     CREATE TABLE customers (
@@ -281,4 +314,6 @@ INDEX_STATEMENTS: list[str] = [
     "CREATE INDEX idx_audit_created ON audit_log(created_at);",
     "CREATE INDEX idx_stock_movements_item ON stock_movements(item_id);",
     "CREATE INDEX idx_purchase_items_purchase ON purchase_items(purchase_id);",
+    "CREATE INDEX idx_return_items_return ON return_items(return_id);",
+    "CREATE INDEX idx_returns_ref ON returns(type, ref_id);",
 ]

@@ -82,6 +82,19 @@ class ReportsService:
             "profit": revenue - cost, "by_item": by_item,
         }
 
+    # ── بيانات المخططات ─────────────────────────────────────────────────
+    def chart_sales_daily(self, dfrom: str, dto: str) -> list[tuple[str, float]]:
+        rows = self._repo.sales_daily(dfrom, dto)
+        return [((r["date"] or "")[5:], float(r["total"] or 0)) for r in rows]
+
+    def chart_top_items(self, dfrom: str, dto: str, n: int = 5) -> list[tuple[str, float]]:
+        rows = self._repo.sales_by_item(dfrom, dto)
+        return [(r["description"][:12], float(r["revenue"] or 0)) for r in rows[:n]]
+
+    def chart_treasury(self, dfrom: str, dto: str) -> list[tuple[str, float]]:
+        t = self.treasury_report(dfrom, dto)["totals"]
+        return [("قبض", t["total_in"]), ("صرف", t["total_out"])]
+
     # ── المخزون ─────────────────────────────────────────────────────────
     def inventory_report(self, stagnant_days: int = 30) -> dict:
         rows = self._repo.inventory_snapshot()

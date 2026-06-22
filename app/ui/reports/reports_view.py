@@ -6,9 +6,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PyQt6.QtCore import QDate
 from PyQt6.QtWidgets import (
     QComboBox,
+    QDateEdit,
     QGridLayout,
+    QHBoxLayout,
     QLabel,
     QMessageBox,
     QPushButton,
@@ -18,7 +21,9 @@ from PyQt6.QtWidgets import (
 )
 
 from app.core.utils.formatters import format_currency, format_iso_date
-from app.ui.components.widgets import muted_label, title_label
+from app.ui.components.charts import BarChart
+from app.ui.components.page import Page
+from app.ui.components.widgets import Card, heading_label, muted_label, title_label
 from app.ui.reports.report_base import ReportPage
 
 if TYPE_CHECKING:
@@ -51,6 +56,7 @@ class ReportsView(QWidget):
             ("الأقساط والمتأخرات", lambda: ArrearsReportPage(self._c)),
             ("كشف حساب عميل", lambda: CustomerStatementPage(self._c)),
             ("كشف حساب مورّد", lambda: SupplierStatementPage(self._c)),
+            ("ملخص بياني (مخططات)", lambda: ChartsReportPage(self._c)),
         ]
         for i, (label, factory) in enumerate(reports):
             btn = QPushButton(label)
@@ -136,7 +142,8 @@ class PurchasesReportPage(ReportPage):
 class TreasuryReportPage(ReportPage):
     _DIR = {"in": "قبض", "out": "صرف"}
     _CAT = {"income": "إيراد", "expense": "مصروف", "manual": "تسوية",
-            "sale": "بيع", "installment": "قسط", "purchase": "شراء"}
+            "sale": "بيع", "installment": "قسط", "purchase": "شراء",
+            "return": "مرتجع"}
 
     def __init__(self, container: "Container"):
         super().__init__(container, "تقرير حركة الخزينة")
@@ -345,3 +352,46 @@ class SupplierStatementPage(ReportPage):
             ["التاريخ", "البيان", "مدين", "دائن", "الرصيد"],
             [[str(x) for x in row] for row in rows], summary,
         )
+
+
+# ── ملخص بياني (مخططات) ─────────────────────────────────────────────────
+class ChartsReportPage(Page):
+    def __init__(self, container: "Container"):
+        super().__init__(container.navigator, "ملخص بياني")
+        self._c = container
+
+        bar = Card()
+        row = QHBoxLayout()
+        bar.layout().addLayout(row)
+        today = QDate.currentDate()
+        self._from = QDateEdit()
+        self._from.setCalendarPopup(True)
+        self._from.setDate(today.addDays(-6))
+        self._to = QDateEdit()
+        self._to.setCalendarPopup(True)
+        self._to.setDate(today)
+        run = QPushButton("تحديث المخططات")
+        run.clicked.connect(self.refresh)
+        row.addWidget(QLabel("من"))
+        row.addWidget(self._from)
+        row.addWidget(QLabel("إلى"))
+        row.addWidget(self._to)
+        row.addWidget(run)
+        row.addStretch(1)
+        self.body.addWidget(bar)
+
+        self._sales_chart = BarChart("المبيعات اليومية")
+        self._items_chart = BarChart("أعلى الأصناف مبيعًا")
+        self._treasury_chart = BarChart("الخزينة: قبض مقابل صرف")
+        self.body.addWidget(self._sales_chart, stretch=1)
+        self.body.addWidget(self._items_chart, stretch=1)
+        self.body.addWidget(self._treasury_chart, stretch=1)
+
+        self.refresh()
+
+    def refresh(self) -> None:
+        dfrom = self._from.date().toString("yyyy-MM-dd")
+        dto = self._to.date().toString("yyyy-MM-dd")
+        self._sales_chart.set_data(self._c.reports.chart_sales_daily(dfrom, dto))
+        self._items_chart.set_data(self._c.reports.chart_top_items(dfrom, dto))
+        self._treasury_chart.set_data(self._c.reports.chart_treasury(dfrom, dto))

@@ -32,7 +32,7 @@ from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
 from app.services.purchases_service import PurchasesServiceError
 from app.ui.components.page import Page
-from app.ui.components.printing import print_html
+from app.ui.components.printing import build_invoice_html, print_html
 from app.ui.components.widgets import Card, StatCard, heading_label, title_label
 
 if TYPE_CHECKING:
@@ -288,6 +288,11 @@ class PurchaseDetailPage(Page):
 
         printb = QPushButton("طباعة")
         printb.clicked.connect(self._print)
+        ret = QPushButton("مرتجع")
+        ret.setObjectName("Ghost")
+        ret.setEnabled(container.auth.can(Permissions.PURCHASES_MANAGE))
+        ret.clicked.connect(self._return)
+        self.add_action(ret)
         self.add_action(printb)
 
         self._stats = QHBoxLayout()
@@ -346,6 +351,10 @@ class PurchaseDetailPage(Page):
                 r, 3, QTableWidgetItem(format_currency(it.line_total, symbol))
             )
 
+    def _return(self) -> None:
+        from app.ui.returns.returns_view import PurchaseReturnPage
+        self._c.navigator.push(PurchaseReturnPage(self._c, self._purchase_id))
+
     def _print(self) -> None:
         purchase = self._c.purchases.get(self._purchase_id)
         symbol = self._c.settings.currency_symbol
@@ -357,7 +366,6 @@ class PurchaseDetailPage(Page):
             for it in items
         )
         html = (
-            f"<h2>فاتورة شراء {purchase.display_no}</h2>"
             f"<p>المورّد: {purchase.supplier_name} | التاريخ: "
             f"{format_iso_date(purchase.date)}</p>"
             "<table><tr><th>الصنف</th><th>الكمية</th><th>التكلفة</th>"
@@ -366,4 +374,4 @@ class PurchaseDetailPage(Page):
             f"المدفوع: {format_currency(purchase.paid, symbol)} | "
             f"المتبقّي: {format_currency(purchase.remaining, symbol)}</p>"
         )
-        print_html(self, html, "طباعة فاتورة شراء")
+        print_html(self, build_invoice_html(self._c, f"فاتورة شراء {purchase.display_no}", html), "طباعة فاتورة شراء")

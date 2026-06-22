@@ -33,7 +33,7 @@ from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
 from app.services.installments_service import InstallmentsServiceError
 from app.ui.components.page import Page
-from app.ui.components.printing import export_pdf, print_html
+from app.ui.components.printing import build_invoice_html, export_pdf, print_html
 from app.ui.components.widgets import Card, StatCard, heading_label, title_label
 
 if TYPE_CHECKING:
@@ -388,7 +388,6 @@ class InstallmentDetailPage(Page):
         )
         paid = self._c.installments.plan_paid(self._plan_id)
         return (
-            f"<h2>{self._c.settings.showroom_name} — عقد تقسيط #{plan.id}</h2>"
             f"<p>العميل: {plan.customer_name} | المقدّم: "
             f"{format_currency(plan.down_payment, symbol)} | إجمالي الأقساط: "
             f"{format_currency(plan.total_amount, symbol)} | المدفوع: "
@@ -399,11 +398,11 @@ class InstallmentDetailPage(Page):
         )
 
     def _print(self) -> None:
-        print_html(self, self._schedule_html(), "جدول الأقساط")
+        print_html(self, build_invoice_html(self._c, f"عقد تقسيط #{self._plan_id}", self._schedule_html()), "جدول الأقساط")
 
     def _pdf(self) -> None:
         plan = self._c.installments.get_plan(self._plan_id)
-        export_pdf(self, self._schedule_html(), f"تقسيط_{plan.customer_name}.pdf")
+        export_pdf(self, build_invoice_html(self._c, f"عقد تقسيط #{self._plan_id}", self._schedule_html()), f"تقسيط_{plan.customer_name}.pdf")
 
 
 # ── تحصيل قسط ───────────────────────────────────────────────────────────

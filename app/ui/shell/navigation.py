@@ -15,6 +15,7 @@ from app.ui.customers.customers_view import CustomersView
 from app.ui.audit.audit_view import AuditView
 from app.ui.backup.backup_view import BackupView
 from app.ui.day_closing.day_closing_view import DayClosingView
+from app.ui.expenses.expenses_view import ExpensesView
 from app.ui.installments.installments_view import InstallmentsView
 from app.ui.inventory.inventory_view import InventoryView
 from app.ui.modules.dashboard_view import DashboardView
@@ -79,13 +80,7 @@ def build_nav_items() -> list[NavItem]:
         ),
         NavItem(
             "expenses", "المصروفات والإيرادات", Permissions.EXPENSES_VIEW,
-            _placeholder(
-                "المصروفات والإيرادات",
-                "تُسجَّل المصروفات والإيرادات حاليًا من شاشة «الخزينة» عبر أزرار "
-                "صرف/قبض بتصنيف مصروف أو إيراد.\nشاشة مخصّصة لتصنيفات المصروفات "
-                "والتقارير التفصيلية مُخطّطة كميزة مستقبلية.",
-            ),
-            "💸",
+            lambda c: ExpensesView(c), "💸",
         ),
         NavItem(
             "day_closing", "الإقفال اليومي", Permissions.DAY_CLOSE,
