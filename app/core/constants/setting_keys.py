@@ -22,6 +22,7 @@ class SettingKeys:
     # النسخ الاحتياطي
     BACKUP_MODE = "backup_mode"  # manual | auto
     BACKUP_INTERVAL_DAYS = "backup_interval_days"
+    BACKUP_ON_CLOSE = "backup_on_close"
     LAST_BACKUP_AT = "last_backup_at"
 
     # حالة الإعداد لأول مرة
@@ -37,6 +38,7 @@ class SettingKeys:
         THEME_TEMPLATE: ("classic_business", "string"),
         BACKUP_MODE: ("manual", "string"),
         BACKUP_INTERVAL_DAYS: ("1", "int"),
+        BACKUP_ON_CLOSE: ("false", "bool"),
         LAST_BACKUP_AT: ("", "string"),
         SETUP_COMPLETED: ("false", "bool"),
     }

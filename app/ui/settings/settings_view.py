@@ -9,21 +9,17 @@ from typing import TYPE_CHECKING
 
 from PyQt6.QtWidgets import (
     QComboBox,
-    QFileDialog,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
-    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
 
 from app.core.constants.permissions import Permissions
 from app.core.constants.setting_keys import SettingKeys
-from app.services.backup_service import BackupError
-from app.ui.components.widgets import Card, heading_label, title_label
+from app.ui.components.widgets import Card, heading_label, muted_label, title_label
 
 if TYPE_CHECKING:
     from app.core.container import Container
@@ -43,8 +39,9 @@ class SettingsView(QWidget):
 
         layout.addWidget(self._company_card())
         layout.addWidget(self._theme_card())
-        if self._c.auth.can(Permissions.BACKUP_MANAGE):
-            layout.addWidget(self._backup_card())
+        layout.addWidget(
+            muted_label("النسخ الاحتياطي والاستعادة في وحدة «النسخ الاحتياطي» المستقلة.")
+        )
         layout.addStretch(1)
 
     # ── بيانات المعرض ───────────────────────────────────────────────────
@@ -109,87 +106,3 @@ class SettingsView(QWidget):
         theme_id = self._theme_combo.currentData()
         if theme_id:
             self._c.theme.apply(theme_id)
-
-    # ── النسخ الاحتياطي ─────────────────────────────────────────────────
-    def _backup_card(self) -> Card:
-        card = Card()
-        lay = card.layout()
-        lay.addWidget(heading_label("النسخ الاحتياطي والاستعادة"))
-
-        s = self._c.settings
-        mode_row = QHBoxLayout()
-        mode_row.addWidget(QLabel("الوضع"))
-        self._backup_mode = QComboBox()
-        self._backup_mode.addItem("يدوي", "manual")
-        self._backup_mode.addItem("تلقائي", "auto")
-        self._backup_mode.setCurrentIndex(
-            1 if s.get(SettingKeys.BACKUP_MODE) == "auto" else 0
-        )
-        mode_row.addWidget(self._backup_mode)
-
-        mode_row.addWidget(QLabel("كل (أيام)"))
-        self._interval = QSpinBox()
-        self._interval.setRange(1, 90)
-        self._interval.setValue(s.get_int(SettingKeys.BACKUP_INTERVAL_DAYS, 1))
-        mode_row.addWidget(self._interval)
-        mode_row.addStretch(1)
-        lay.addLayout(mode_row)
-
-        save_policy = QPushButton("حفظ سياسة النسخ")
-        save_policy.clicked.connect(self._save_backup_policy)
-        lay.addWidget(save_policy)
-
-        buttons = QHBoxLayout()
-        backup_now = QPushButton("نسخ احتياطي الآن")
-        backup_now.clicked.connect(self._backup_now)
-        restore = QPushButton("استعادة من ملف")
-        restore.setObjectName("Danger")
-        restore.clicked.connect(self._restore)
-        buttons.addWidget(backup_now)
-        buttons.addWidget(restore)
-        buttons.addStretch(1)
-        lay.addLayout(buttons)
-        return card
-
-    def _save_backup_policy(self) -> None:
-        self._c.settings.set(
-            SettingKeys.BACKUP_MODE, self._backup_mode.currentData()
-        )
-        self._c.settings.set(
-            SettingKeys.BACKUP_INTERVAL_DAYS, str(self._interval.value()), "int"
-        )
-        QMessageBox.information(self, "تم", "تم حفظ سياسة النسخ الاحتياطي.")
-
-    def _backup_now(self) -> None:
-        user = self._c.auth.current_user
-        try:
-            path = self._c.backup.create_backup(user.id if user else None)
-        except BackupError as exc:
-            QMessageBox.critical(self, "خطأ", str(exc))
-            return
-        QMessageBox.information(self, "تم", f"تم إنشاء النسخة الاحتياطية:\n{path}")
-
-    def _restore(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, "اختر ملف النسخة الاحتياطية", "", "قاعدة بيانات (*.db)"
-        )
-        if not path:
-            return
-        confirm = QMessageBox.question(
-            self,
-            "تأكيد الاستعادة",
-            "سيتم استبدال البيانات الحالية بالكامل. هل أنت متأكد؟",
-        )
-        if confirm != QMessageBox.StandardButton.Yes:
-            return
-        user = self._c.auth.current_user
-        try:
-            self._c.backup.restore_backup(path, user.id if user else None)
-        except BackupError as exc:
-            QMessageBox.critical(self, "خطأ", str(exc))
-            return
-        QMessageBox.information(
-            self,
-            "تمت الاستعادة",
-            "تمت استعادة البيانات. يُفضّل إعادة تشغيل البرنامج.",
-        )

@@ -90,4 +90,8 @@ class Application:
 
     def _on_quit(self) -> None:
         self._safe_auto_backup()
+        try:
+            self._container.backup.run_backup_on_close()
+        except Exception:  # noqa: BLE001 — لا يجب أن يمنع الإغلاق.
+            pass
         self._container.db.close()
