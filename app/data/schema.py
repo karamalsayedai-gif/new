@@ -22,6 +22,20 @@ STOCK_MOVEMENTS_DDL = """
     );
 """
 
+# بنود فاتورة الشراء — معرّف منفصلًا لإعادة استخدامه في الترقية.
+PURCHASE_ITEMS_DDL = """
+    CREATE TABLE purchase_items (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        purchase_id INTEGER NOT NULL,
+        item_id     INTEGER,
+        description TEXT NOT NULL,
+        quantity    REAL NOT NULL DEFAULT 1,
+        unit_cost   REAL NOT NULL DEFAULT 0,
+        FOREIGN KEY (purchase_id) REFERENCES purchases(id) ON DELETE CASCADE,
+        FOREIGN KEY (item_id) REFERENCES inventory_items(id)
+    );
+"""
+
 CREATE_STATEMENTS: list[str] = [
     # ── الأمن والصلاحيات ────────────────────────────────────────────────
     """
@@ -144,6 +158,7 @@ CREATE_STATEMENTS: list[str] = [
         FOREIGN KEY (user_id) REFERENCES users(id)
     );
     """,
+    PURCHASE_ITEMS_DDL,
     # ── العملاء ─────────────────────────────────────────────────────────
     """
     CREATE TABLE customers (
@@ -251,4 +266,5 @@ INDEX_STATEMENTS: list[str] = [
     "CREATE INDEX idx_installments_plan ON installments(plan_id);",
     "CREATE INDEX idx_audit_created ON audit_log(created_at);",
     "CREATE INDEX idx_stock_movements_item ON stock_movements(item_id);",
+    "CREATE INDEX idx_purchase_items_purchase ON purchase_items(purchase_id);",
 ]

@@ -41,3 +41,11 @@ def run(db: "Database", old_version: int, new_version: int) -> None:
                 "ALTER TABLE customers ADD COLUMN credit_limit REAL NOT NULL "
                 "DEFAULT 0"
             )
+
+        # v3 -> v4: بنود فاتورة الشراء.
+        if old_version < 4:
+            conn.execute(schema.PURCHASE_ITEMS_DDL)
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_purchase_items_purchase "
+                "ON purchase_items(purchase_id)"
+            )

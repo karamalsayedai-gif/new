@@ -132,6 +132,63 @@ class Supplier:
 
 
 @dataclass
+class Purchase:
+    id: int
+    supplier_id: int
+    total: float
+    paid: float
+    date: str
+    day_id: int | None = None
+    user_id: int | None = None
+    notes: str = ""
+    supplier_name: str = ""
+
+    @property
+    def remaining(self) -> float:
+        return self.total - self.paid
+
+    @staticmethod
+    def from_row(row: Mapping) -> "Purchase":
+        keys = row.keys()
+        return Purchase(
+            id=row["id"],
+            supplier_id=row["supplier_id"],
+            total=row["total"] or 0.0,
+            paid=row["paid"] or 0.0,
+            date=row["date"] or "",
+            day_id=row["day_id"],
+            user_id=row["user_id"],
+            notes=row["notes"] or "",
+            supplier_name=row["supplier_name"] if "supplier_name" in keys else "",
+        )
+
+
+@dataclass
+class PurchaseItem:
+    id: int
+    purchase_id: int
+    item_id: int | None
+    description: str
+    quantity: float
+    unit_cost: float
+
+    @property
+    def line_total(self) -> float:
+        return self.quantity * self.unit_cost
+
+    @staticmethod
+    def from_row(row: Mapping) -> "PurchaseItem":
+        return PurchaseItem(
+            id=row["id"],
+            purchase_id=row["purchase_id"],
+            item_id=row["item_id"],
+            description=row["description"],
+            quantity=row["quantity"] or 0.0,
+            unit_cost=row["unit_cost"] or 0.0,
+        )
+
+
+@dataclass
 class DayClosing:
     id: int
     business_date: str
