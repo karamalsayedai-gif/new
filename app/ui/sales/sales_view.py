@@ -103,7 +103,7 @@ class SalesView(QWidget):
         ]
         self._table.setRowCount(len(sales))
         for r, s in enumerate(sales):
-            id_item = QTableWidgetItem(str(s.id))
+            id_item = QTableWidgetItem(s.display_no)
             id_item.setData(Qt.ItemDataRole.UserRole, s.id)
             self._table.setItem(r, 0, id_item)
             self._table.setItem(r, 1, QTableWidgetItem(s.customer_name or "نقدي"))
@@ -360,7 +360,7 @@ class SaleDetailPage(Page):
             self.go_back()
             return
         symbol = self._c.settings.currency_symbol
-        self.set_title(f"فاتورة بيع #{sale.id} — {sale.customer_name or 'نقدي'}")
+        self.set_title(f"فاتورة بيع {sale.display_no} — {sale.customer_name or 'نقدي'}")
 
         while self._stats.count():
             item = self._stats.takeAt(0)
@@ -405,7 +405,7 @@ class SaleDetailPage(Page):
             for it in items
         )
         html = (
-            f"<h2>{self._c.settings.showroom_name} — فاتورة بيع #{sale.id}</h2>"
+            f"<h2>{self._c.settings.showroom_name} — فاتورة بيع {sale.display_no}</h2>"
             f"<p>العميل: {sale.customer_name or 'نقدي'} | التاريخ: "
             f"{format_iso_date(sale.date)}</p>"
             "<table><tr><th>الصنف</th><th>الكمية</th><th>السعر</th>"

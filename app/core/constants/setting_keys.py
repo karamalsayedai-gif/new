@@ -25,6 +25,14 @@ class SettingKeys:
     BACKUP_ON_CLOSE = "backup_on_close"
     LAST_BACKUP_AT = "last_backup_at"
 
+    # أمان الدخول
+    LOGIN_MAX_ATTEMPTS = "login_max_attempts"
+    LOGIN_LOCKOUT_MINUTES = "login_lockout_minutes"
+
+    # ترقيم الفواتير الرسمي
+    SALES_NO_PREFIX = "sales_no_prefix"
+    PURCHASE_NO_PREFIX = "purchase_no_prefix"
+
     # حالة الإعداد لأول مرة
     SETUP_COMPLETED = "setup_completed"
 
@@ -40,5 +48,9 @@ class SettingKeys:
         BACKUP_INTERVAL_DAYS: ("1", "int"),
         BACKUP_ON_CLOSE: ("false", "bool"),
         LAST_BACKUP_AT: ("", "string"),
+        LOGIN_MAX_ATTEMPTS: ("5", "int"),
+        LOGIN_LOCKOUT_MINUTES: ("15", "int"),
+        SALES_NO_PREFIX: ("ف-", "string"),
+        PURCHASE_NO_PREFIX: ("ش-", "string"),
         SETUP_COMPLETED: ("false", "bool"),
     }

@@ -55,7 +55,7 @@ class Container:
         # الخدمات
         self.audit = AuditService(self.db)
         self.settings = SettingsService(self.settings_repo)
-        self.auth = AuthService(self.users_repo, self.audit)
+        self.auth = AuthService(self.users_repo, self.audit, self.settings)
         self.users = UsersService(self.users_repo, self.audit)
         self.customers = CustomersService(self.customers_repo, self.audit)
         self.suppliers = SuppliersService(self.suppliers_repo, self.audit)
@@ -65,13 +65,15 @@ class Container:
             self.treasury_repo, self.day_closing, self.audit
         )
         self.purchases = PurchasesService(
-            self.purchases_repo, self.day_closing, self.audit
+            self.purchases_repo, self.day_closing, self.audit, self.settings
         )
         self.sales = SalesService(
-            self.sales_repo, self.inventory_repo, self.day_closing, self.audit
+            self.sales_repo, self.inventory_repo, self.day_closing, self.audit,
+            self.settings,
         )
         self.installments = InstallmentsService(
-            self.installments_repo, self.inventory_repo, self.day_closing, self.audit
+            self.installments_repo, self.inventory_repo, self.day_closing,
+            self.audit, self.settings,
         )
         self.reports = ReportsService(self.reports_repo, self.installments_repo)
         self.backup = BackupService(self.db, self.settings, self.audit)

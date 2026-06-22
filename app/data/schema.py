@@ -71,7 +71,15 @@ CREATE_STATEMENTS: list[str] = [
         is_active     INTEGER NOT NULL DEFAULT 1,
         created_at    TEXT NOT NULL,
         last_login_at TEXT,
+        failed_attempts INTEGER NOT NULL DEFAULT 0,
+        locked_until  TEXT,
         FOREIGN KEY (role_id) REFERENCES roles(id)
+    );
+    """,
+    """
+    CREATE TABLE number_sequences (
+        name  TEXT PRIMARY KEY,
+        value INTEGER NOT NULL DEFAULT 0
     );
     """,
     # ── الإعدادات ───────────────────────────────────────────────────────
@@ -147,6 +155,7 @@ CREATE_STATEMENTS: list[str] = [
     CREATE TABLE purchases (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         supplier_id INTEGER NOT NULL,
+        invoice_no  TEXT,
         total       REAL NOT NULL DEFAULT 0,
         paid        REAL NOT NULL DEFAULT 0,
         date        TEXT NOT NULL,
@@ -178,6 +187,7 @@ CREATE_STATEMENTS: list[str] = [
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         customer_id INTEGER,
         type        TEXT NOT NULL,
+        invoice_no  TEXT,
         total       REAL NOT NULL DEFAULT 0,
         discount    REAL NOT NULL DEFAULT 0,
         paid        REAL NOT NULL DEFAULT 0,

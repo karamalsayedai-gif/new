@@ -67,6 +67,23 @@ class UsersRepository(BaseRepository):
                 (when, user_id),
             )
 
+    def register_failed_login(
+        self, user_id: int, attempts: int, locked_until: str | None
+    ) -> None:
+        with self.db.transaction() as conn:
+            conn.execute(
+                "UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?",
+                (attempts, locked_until, user_id),
+            )
+
+    def reset_login_state(self, user_id: int) -> None:
+        with self.db.transaction() as conn:
+            conn.execute(
+                "UPDATE users SET failed_attempts = 0, locked_until = NULL "
+                "WHERE id = ?",
+                (user_id,),
+            )
+
     # ── الأدوار والصلاحيات ──────────────────────────────────────────────
     def list_roles(self) -> list[Role]:
         rows = self.db.query("SELECT * FROM roles ORDER BY id")

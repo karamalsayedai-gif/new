@@ -9,10 +9,12 @@ from typing import TYPE_CHECKING
 
 from PyQt6.QtWidgets import (
     QComboBox,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -39,10 +41,66 @@ class SettingsView(QWidget):
 
         layout.addWidget(self._company_card())
         layout.addWidget(self._theme_card())
+        layout.addWidget(self._security_card())
         layout.addWidget(
             muted_label("النسخ الاحتياطي والاستعادة في وحدة «النسخ الاحتياطي» المستقلة.")
         )
         layout.addStretch(1)
+
+    # ── الأمان وترقيم الفواتير ──────────────────────────────────────────
+    def _security_card(self) -> Card:
+        card = Card()
+        lay = card.layout()
+        lay.addWidget(heading_label("الأمان وترقيم الفواتير"))
+        s = self._c.settings
+
+        row = QHBoxLayout()
+        row.addWidget(QLabel("أقصى محاولات دخول"))
+        self._max_attempts = QSpinBox()
+        self._max_attempts.setRange(3, 20)
+        self._max_attempts.setValue(s.get_int(SettingKeys.LOGIN_MAX_ATTEMPTS, 5))
+        row.addWidget(self._max_attempts)
+        row.addWidget(QLabel("مدة القفل (دقيقة)"))
+        self._lockout = QSpinBox()
+        self._lockout.setRange(1, 1440)
+        self._lockout.setValue(s.get_int(SettingKeys.LOGIN_LOCKOUT_MINUTES, 15))
+        row.addWidget(self._lockout)
+        row.addStretch(1)
+        lay.addLayout(row)
+
+        row2 = QHBoxLayout()
+        row2.addWidget(QLabel("بادئة فاتورة البيع"))
+        self._sales_prefix = QLineEdit(s.get(SettingKeys.SALES_NO_PREFIX))
+        self._sales_prefix.setFixedWidth(90)
+        row2.addWidget(self._sales_prefix)
+        row2.addWidget(QLabel("بادئة فاتورة الشراء"))
+        self._purchase_prefix = QLineEdit(s.get(SettingKeys.PURCHASE_NO_PREFIX))
+        self._purchase_prefix.setFixedWidth(90)
+        row2.addWidget(self._purchase_prefix)
+        row2.addStretch(1)
+        lay.addLayout(row2)
+
+        save = QPushButton("حفظ إعدادات الأمان والترقيم")
+        save.setEnabled(self._c.auth.can(Permissions.SETTINGS_MANAGE))
+        save.clicked.connect(self._save_security)
+        lay.addWidget(save)
+        return card
+
+    def _save_security(self) -> None:
+        self._c.settings.set(
+            SettingKeys.LOGIN_MAX_ATTEMPTS, str(self._max_attempts.value()), "int"
+        )
+        self._c.settings.set(
+            SettingKeys.LOGIN_LOCKOUT_MINUTES, str(self._lockout.value()), "int"
+        )
+        self._c.settings.set(
+            SettingKeys.SALES_NO_PREFIX, self._sales_prefix.text().strip() or "ف-"
+        )
+        self._c.settings.set(
+            SettingKeys.PURCHASE_NO_PREFIX,
+            self._purchase_prefix.text().strip() or "ش-",
+        )
+        QMessageBox.information(self, "تم", "تم حفظ إعدادات الأمان والترقيم.")
 
     # ── بيانات المعرض ───────────────────────────────────────────────────
     def _company_card(self) -> Card:

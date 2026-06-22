@@ -67,3 +67,20 @@ def run(db: "Database", old_version: int, new_version: int) -> None:
             conn.execute(
                 "ALTER TABLE installments ADD COLUMN interest REAL NOT NULL DEFAULT 0"
             )
+
+        # v6 -> v7: قفل الحساب بعد محاولات دخول فاشلة.
+        if old_version < 7:
+            conn.execute(
+                "ALTER TABLE users ADD COLUMN failed_attempts INTEGER NOT NULL "
+                "DEFAULT 0"
+            )
+            conn.execute("ALTER TABLE users ADD COLUMN locked_until TEXT")
+
+        # v7 -> v8: ترقيم رسمي تسلسلي للفواتير.
+        if old_version < 8:
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS number_sequences ("
+                "name TEXT PRIMARY KEY, value INTEGER NOT NULL DEFAULT 0)"
+            )
+            conn.execute("ALTER TABLE sales ADD COLUMN invoice_no TEXT")
+            conn.execute("ALTER TABLE purchases ADD COLUMN invoice_no TEXT")

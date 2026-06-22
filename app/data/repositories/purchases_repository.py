@@ -29,15 +29,17 @@ class PurchasesRepository(BaseRepository):
         paid: float,
         items: Sequence[dict],
         update_item_cost: bool = True,
-    ) -> tuple[int, float]:
-        """ترحيل فاتورة شراء كاملة في معاملة واحدة. يعيد (المعرّف، الإجمالي)."""
+        invoice_prefix: str = "ش-",
+    ) -> tuple[int, float, str]:
+        """ترحيل فاتورة شراء كاملة في معاملة واحدة. يعيد (المعرّف، الإجمالي، الرقم)."""
         total = sum(float(it["quantity"]) * float(it["unit_cost"]) for it in items)
         stamp = now_iso()
         with self.db.transaction() as conn:
+            invoice_no = self.next_sequence(conn, "purchases", invoice_prefix)
             cur = conn.execute(
-                "INSERT INTO purchases(supplier_id, total, paid, date, day_id, "
-                "user_id, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (supplier_id, total, paid, date, day_id, user_id, notes),
+                "INSERT INTO purchases(supplier_id, invoice_no, total, paid, date, "
+                "day_id, user_id, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (supplier_id, invoice_no, total, paid, date, day_id, user_id, notes),
             )
             purchase_id = int(cur.lastrowid)
 
@@ -87,7 +89,7 @@ class PurchasesRepository(BaseRepository):
                     (remaining, supplier_id),
                 )
 
-            return purchase_id, total
+            return purchase_id, total, invoice_no
 
     def delete_full(self, purchase_id: int, user_id: int | None) -> None:
         """عكس فاتورة شراء بالكامل (مخزون/خزينة/رصيد مورّد) في معاملة واحدة."""

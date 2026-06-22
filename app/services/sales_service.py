@@ -14,12 +14,14 @@ from __future__ import annotations
 from datetime import date
 from typing import Sequence
 
+from app.core.constants.setting_keys import SettingKeys
 from app.core.utils.formatters import business_date_key
 from app.data.repositories.inventory_repository import InventoryRepository
 from app.data.repositories.sales_repository import SalesRepository
 from app.domain.entities import Sale, SaleItem
 from app.services.audit_service import AuditService
 from app.services.day_closing_service import DayClosingError, DayClosingService
+from app.services.settings_service import SettingsService
 
 
 class SalesServiceError(Exception):
@@ -33,11 +35,13 @@ class SalesService:
         inventory_repo: InventoryRepository,
         day_closing: DayClosingService,
         audit: AuditService,
+        settings: SettingsService,
     ):
         self._repo = repo
         self._inventory = inventory_repo
         self._day_closing = day_closing
         self._audit = audit
+        self._settings = settings
 
     def create_sale(
         self,
@@ -98,7 +102,7 @@ class SalesService:
         except DayClosingError as exc:
             raise SalesServiceError(str(exc)) from exc
 
-        sale_id, total = self._repo.create_full(
+        sale_id, total, invoice_no = self._repo.create_full(
             customer_id=customer_id,
             date=business_date_key(date.today()),
             day_id=day_id,
@@ -107,10 +111,11 @@ class SalesService:
             discount=discount,
             paid=paid,
             items=clean,
+            invoice_prefix=self._settings.get(SettingKeys.SALES_NO_PREFIX, "ف-"),
         )
         self._audit.log(
             "sale_create", user_id=actor_id, entity="sales", entity_id=sale_id,
-            details=f"total={total:.2f} paid={paid:.2f}",
+            details=f"{invoice_no} total={total:.2f} paid={paid:.2f}",
         )
         return sale_id
 

@@ -92,7 +92,7 @@ class PurchasesView(QWidget):
         purchases = self._c.purchases.list(self._search.text())
         self._table.setRowCount(len(purchases))
         for r, p in enumerate(purchases):
-            id_item = QTableWidgetItem(str(p.id))
+            id_item = QTableWidgetItem(p.display_no)
             id_item.setData(Qt.ItemDataRole.UserRole, p.id)
             self._table.setItem(r, 0, id_item)
             self._table.setItem(r, 1, QTableWidgetItem(p.supplier_name))
@@ -312,7 +312,7 @@ class PurchaseDetailPage(Page):
             self.go_back()
             return
         symbol = self._c.settings.currency_symbol
-        self.set_title(f"فاتورة شراء #{purchase.id} — {purchase.supplier_name}")
+        self.set_title(f"فاتورة شراء {purchase.display_no} — {purchase.supplier_name}")
 
         while self._stats.count():
             item = self._stats.takeAt(0)
@@ -357,7 +357,7 @@ class PurchaseDetailPage(Page):
             for it in items
         )
         html = (
-            f"<h2>فاتورة شراء #{purchase.id}</h2>"
+            f"<h2>فاتورة شراء {purchase.display_no}</h2>"
             f"<p>المورّد: {purchase.supplier_name} | التاريخ: "
             f"{format_iso_date(purchase.date)}</p>"
             "<table><tr><th>الصنف</th><th>الكمية</th><th>التكلفة</th>"

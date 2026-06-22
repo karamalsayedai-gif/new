@@ -27,16 +27,20 @@ class SalesRepository(BaseRepository):
         discount: float,
         paid: float,
         items: Sequence[dict],
-    ) -> tuple[int, float]:
-        """ترحيل فاتورة بيع كاملة في معاملة واحدة. يعيد (المعرّف، الإجمالي)."""
+        invoice_prefix: str = "ف-",
+    ) -> tuple[int, float, str]:
+        """ترحيل فاتورة بيع كاملة في معاملة واحدة. يعيد (المعرّف، الإجمالي، رقم الفاتورة)."""
         gross = sum(float(it["quantity"]) * float(it["unit_price"]) for it in items)
         total = gross - discount
         stamp = now_iso()
         with self.db.transaction() as conn:
+            invoice_no = self.next_sequence(conn, "sales", invoice_prefix)
             cur = conn.execute(
-                "INSERT INTO sales(customer_id, type, total, discount, paid, date, "
-                "day_id, user_id, notes) VALUES (?, 'cash', ?, ?, ?, ?, ?, ?, ?)",
-                (customer_id, total, discount, paid, date, day_id, user_id, notes),
+                "INSERT INTO sales(customer_id, type, invoice_no, total, discount, "
+                "paid, date, day_id, user_id, notes) "
+                "VALUES (?, 'cash', ?, ?, ?, ?, ?, ?, ?, ?)",
+                (customer_id, invoice_no, total, discount, paid, date, day_id,
+                 user_id, notes),
             )
             sale_id = int(cur.lastrowid)
 
@@ -76,7 +80,7 @@ class SalesRepository(BaseRepository):
                     (remaining, customer_id),
                 )
 
-            return sale_id, total
+            return sale_id, total, invoice_no
 
     def delete_full(self, sale_id: int, user_id: int | None) -> None:
         """عكس فاتورة بيع بالكامل (مخزون/خزينة/رصيد عميل) في معاملة واحدة."""

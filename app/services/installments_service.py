@@ -12,12 +12,14 @@ import calendar
 from datetime import date
 from typing import Sequence
 
+from app.core.constants.setting_keys import SettingKeys
 from app.core.utils.formatters import business_date_key
 from app.data.repositories.installments_repository import InstallmentsRepository
 from app.data.repositories.inventory_repository import InventoryRepository
 from app.domain.entities import Installment, InstallmentPlan
 from app.services.audit_service import AuditService
 from app.services.day_closing_service import DayClosingError, DayClosingService
+from app.services.settings_service import SettingsService
 
 
 class InstallmentsServiceError(Exception):
@@ -40,11 +42,13 @@ class InstallmentsService:
         inventory_repo: InventoryRepository,
         day_closing: DayClosingService,
         audit: AuditService,
+        settings: SettingsService,
     ):
         self._repo = repo
         self._inventory = inventory_repo
         self._day_closing = day_closing
         self._audit = audit
+        self._settings = settings
 
     # ── إنشاء بيع تقسيط ─────────────────────────────────────────────────
     def create_plan(
@@ -130,6 +134,7 @@ class InstallmentsService:
             interest=interest,
             items=clean,
             installments=schedule,
+            invoice_prefix=self._settings.get(SettingKeys.SALES_NO_PREFIX, "ف-"),
         )
         self._audit.log(
             "installment_create", user_id=actor_id, entity="installment_plans",

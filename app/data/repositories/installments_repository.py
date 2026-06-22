@@ -28,14 +28,18 @@ class InstallmentsRepository(BaseRepository):
         interest: float,
         items: Sequence[dict],
         installments: Sequence[dict],
+        invoice_prefix: str = "ف-",
     ) -> tuple[int, int]:
         """ترحيل بيع تقسيط كامل في معاملة واحدة. يعيد (sale_id, plan_id)."""
         stamp = now_iso()
         with self.db.transaction() as conn:
+            invoice_no = self.next_sequence(conn, "sales", invoice_prefix)
             cur = conn.execute(
-                "INSERT INTO sales(customer_id, type, total, discount, paid, date, "
-                "day_id, user_id, notes) VALUES (?, 'installment', ?, 0, ?, ?, ?, ?, ?)",
-                (customer_id, sale_total, down_payment, date, day_id, user_id, notes),
+                "INSERT INTO sales(customer_id, type, invoice_no, total, discount, "
+                "paid, date, day_id, user_id, notes) "
+                "VALUES (?, 'installment', ?, ?, 0, ?, ?, ?, ?, ?)",
+                (customer_id, invoice_no, sale_total, down_payment, date, day_id,
+                 user_id, notes),
             )
             sale_id = int(cur.lastrowid)
 

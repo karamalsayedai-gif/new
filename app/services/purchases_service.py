@@ -9,11 +9,13 @@ from __future__ import annotations
 from datetime import date
 from typing import Sequence
 
+from app.core.constants.setting_keys import SettingKeys
 from app.core.utils.formatters import business_date_key
 from app.data.repositories.purchases_repository import PurchasesRepository
 from app.domain.entities import Purchase, PurchaseItem
 from app.services.audit_service import AuditService
 from app.services.day_closing_service import DayClosingError, DayClosingService
+from app.services.settings_service import SettingsService
 
 
 class PurchasesServiceError(Exception):
@@ -26,10 +28,12 @@ class PurchasesService:
         repo: PurchasesRepository,
         day_closing: DayClosingService,
         audit: AuditService,
+        settings: SettingsService,
     ):
         self._repo = repo
         self._day_closing = day_closing
         self._audit = audit
+        self._settings = settings
 
     # ── الترحيل ─────────────────────────────────────────────────────────
     def create_purchase(
@@ -73,7 +77,7 @@ class PurchasesService:
         except DayClosingError as exc:
             raise PurchasesServiceError(str(exc)) from exc
 
-        purchase_id, total = self._repo.create_full(
+        purchase_id, total, invoice_no = self._repo.create_full(
             supplier_id=supplier_id,
             date=business_date_key(date.today()),
             day_id=day_id,
@@ -81,11 +85,12 @@ class PurchasesService:
             notes=notes,
             paid=paid,
             items=clean,
+            invoice_prefix=self._settings.get(SettingKeys.PURCHASE_NO_PREFIX, "ش-"),
         )
         self._audit.log(
             "purchase_create", user_id=actor_id, entity="purchases",
             entity_id=purchase_id,
-            details=f"total={total:.2f} paid={paid:.2f}",
+            details=f"{invoice_no} total={total:.2f} paid={paid:.2f}",
         )
         return purchase_id
 

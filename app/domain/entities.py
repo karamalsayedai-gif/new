@@ -142,10 +142,15 @@ class Purchase:
     user_id: int | None = None
     notes: str = ""
     supplier_name: str = ""
+    invoice_no: str = ""
 
     @property
     def remaining(self) -> float:
         return self.total - self.paid
+
+    @property
+    def display_no(self) -> str:
+        return self.invoice_no or f"#{self.id}"
 
     @staticmethod
     def from_row(row: Mapping) -> "Purchase":
@@ -160,6 +165,7 @@ class Purchase:
             user_id=row["user_id"],
             notes=row["notes"] or "",
             supplier_name=row["supplier_name"] if "supplier_name" in keys else "",
+            invoice_no=(row["invoice_no"] if "invoice_no" in keys else "") or "",
         )
 
 
@@ -201,6 +207,11 @@ class Sale:
     user_id: int | None = None
     notes: str = ""
     customer_name: str = ""
+    invoice_no: str = ""
+
+    @property
+    def display_no(self) -> str:
+        return self.invoice_no or f"#{self.id}"
 
     @property
     def remaining(self) -> float:
@@ -229,6 +240,7 @@ class Sale:
             user_id=row["user_id"],
             notes=row["notes"] or "",
             customer_name=row["customer_name"] if "customer_name" in keys else "",
+            invoice_no=(row["invoice_no"] if "invoice_no" in keys else "") or "",
         )
 
 
