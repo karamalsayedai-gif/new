@@ -1,0 +1,47 @@
+/* ===== كلاسيكي للأعمال — بطاقات مرتفعة وحواف معتدلة، شريط جانبي داكن ===== */
+* { font-family: "$font"; font-size: $base_size; }
+QWidget { background: $bg; color: $text; }
+QMainWindow, QDialog { background: $bg; }
+
+#AppBar { background: $appbar_bg; }
+#AppBar QLabel { color: $appbar_text; }
+#AppTitle { color: $appbar_text; font-size: 18px; font-weight: bold; }
+
+#Sidebar { background: $sidebar_bg; }
+#SidebarBrand { color: $sidebar_active_text; font-size: 16px; font-weight: bold; padding: 16px; }
+#NavButton {
+    text-align: right; padding: $nav_pad; border: none; border-radius: $radius;
+    color: $sidebar_text; background: transparent;
+}
+#NavButton:hover { background: rgba(255,255,255,0.10); }
+#NavButton:checked { background: $sidebar_active_bg; color: $sidebar_active_text; font-weight: bold; }
+
+QPushButton {
+    background: $primary; color: $on_primary; border: none; border-radius: $radius;
+    padding: $btn_pad; font-weight: bold;
+}
+QPushButton:hover { background: $primary_hover; }
+QPushButton:disabled { background: $border; color: $text_muted; }
+QPushButton#Ghost { background: transparent; color: $primary; border: 1px solid $primary; }
+QPushButton#Danger { background: $danger; }
+
+QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QPlainTextEdit, QTextEdit {
+    background: $input_bg; border: 1px solid $border; border-radius: $radius;
+    padding: $pad_v; color: $text; selection-background-color: $primary;
+}
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus { border: 1px solid $primary; }
+
+#Card { background: $surface; border: 1px solid $border; border-radius: $radius_lg; }
+#StatCard { background: $surface; border: 1px solid $border; border-radius: $radius_lg; }
+#StatValue { font-size: $stat_value_size; font-weight: bold; color: $stat_accent; }
+#StatLabel { color: $text_muted; }
+#Title { font-size: $title_size; font-weight: bold; color: $text; }
+#Heading { font-size: $heading_size; font-weight: bold; color: $text; }
+#Muted { color: $text_muted; }
+
+QTableWidget, QTableView {
+    background: $surface; border: 1px solid $border; border-radius: $radius;
+    gridline-color: $border;
+}
+QHeaderView::section { background: $surface_alt; color: $text; padding: 9px; border: none; font-weight: bold; }
+QTableWidget::item:selected, QTableView::item:selected { background: $primary; color: $on_primary; }

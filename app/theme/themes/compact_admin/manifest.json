@@ -1,0 +1,12 @@
+{
+  "id": "compact_admin",
+  "name": "إداري مدمج",
+  "mode": "light",
+  "version": "1.0",
+  "layout": {
+    "sidebar": "left",
+    "sidebar_width": 210,
+    "density": "compact",
+    "card_style": "outlined"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "id": "elegant_light",
+  "name": "أنيق فاتح",
+  "mode": "light",
+  "version": "1.0",
+  "layout": {
+    "sidebar": "right",
+    "sidebar_width": 250,
+    "density": "spacious",
+    "card_style": "rounded"
+  }
+}

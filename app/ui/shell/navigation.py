@@ -1,0 +1,90 @@
+"""سجل عناصر التنقل (الوحدات) — مصدر واحد للحقيقة لقائمة الشريط الجانبي.
+
+كل عنصر يحمل: المفتاح، التسمية العربية، الصلاحية المطلوبة (أو None للعام)،
+ودالة إنشاء الواجهة (lazy). إضافة وحدة جديدة في المرحلة 3 = سطر واحد هنا.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Callable
+
+from PyQt6.QtWidgets import QWidget
+
+from app.core.constants.permissions import Permissions
+from app.ui.day_closing.day_closing_view import DayClosingView
+from app.ui.modules.dashboard_view import DashboardView
+from app.ui.modules.placeholder_view import PlaceholderView
+from app.ui.settings.settings_view import SettingsView
+from app.ui.users.users_view import UsersView
+
+if TYPE_CHECKING:
+    from app.core.container import Container
+
+
+@dataclass(frozen=True)
+class NavItem:
+    key: str
+    label: str
+    permission: str | None
+    factory: Callable[["Container"], QWidget]
+
+
+def _placeholder(title: str) -> Callable[["Container"], QWidget]:
+    return lambda _c: PlaceholderView(title)
+
+
+def build_nav_items() -> list[NavItem]:
+    return [
+        NavItem("dashboard", "لوحة التحكم", None, lambda c: DashboardView(c)),
+        NavItem(
+            "inventory", "المخزون", Permissions.INVENTORY_VIEW,
+            _placeholder("المخزون"),
+        ),
+        NavItem(
+            "purchases", "المشتريات", Permissions.PURCHASES_VIEW,
+            _placeholder("المشتريات"),
+        ),
+        NavItem(
+            "suppliers", "الموردون", Permissions.SUPPLIERS_VIEW,
+            _placeholder("الموردون"),
+        ),
+        NavItem(
+            "customers", "العملاء", Permissions.CUSTOMERS_VIEW,
+            _placeholder("العملاء"),
+        ),
+        NavItem(
+            "sales", "المبيعات", Permissions.SALES_CASH_VIEW,
+            _placeholder("المبيعات النقدية"),
+        ),
+        NavItem(
+            "installments", "التقسيط", Permissions.SALES_INSTALLMENT_VIEW,
+            _placeholder("مبيعات التقسيط"),
+        ),
+        NavItem(
+            "treasury", "الخزينة", Permissions.TREASURY_VIEW,
+            _placeholder("الخزينة"),
+        ),
+        NavItem(
+            "expenses", "المصروفات والإيرادات", Permissions.EXPENSES_VIEW,
+            _placeholder("المصروفات والإيرادات"),
+        ),
+        NavItem(
+            "day_closing", "الإقفال اليومي", Permissions.DAY_CLOSE,
+            lambda c: DayClosingView(c),
+        ),
+        NavItem(
+            "reports", "التقارير", Permissions.REPORTS_VIEW,
+            _placeholder("التقارير"),
+        ),
+        NavItem(
+            "users", "المستخدمون", Permissions.USERS_VIEW, lambda c: UsersView(c)
+        ),
+        NavItem(
+            "audit", "سجل التدقيق", Permissions.AUDIT_VIEW,
+            _placeholder("سجل التدقيق"),
+        ),
+        NavItem(
+            "settings", "الإعدادات", Permissions.SETTINGS_VIEW,
+            lambda c: SettingsView(c),
+        ),
+    ]

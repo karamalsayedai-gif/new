@@ -1,0 +1,12 @@
+{
+  "id": "classic_business",
+  "name": "كلاسيكي للأعمال",
+  "mode": "light",
+  "version": "1.0",
+  "layout": {
+    "sidebar": "right",
+    "sidebar_width": 240,
+    "density": "comfortable",
+    "card_style": "elevated"
+  }
+}

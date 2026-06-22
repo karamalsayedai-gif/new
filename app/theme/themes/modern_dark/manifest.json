@@ -1,0 +1,12 @@
+{
+  "id": "modern_dark",
+  "name": "عصري داكن",
+  "mode": "dark",
+  "version": "1.0",
+  "layout": {
+    "sidebar": "left",
+    "sidebar_width": 230,
+    "density": "comfortable",
+    "card_style": "flat"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "radius": "14px",
+  "radius_lg": "20px",
+  "pad": "14px",
+  "pad_v": "12px",
+  "nav_pad": "14px 18px",
+  "btn_pad": "12px 22px"
+}

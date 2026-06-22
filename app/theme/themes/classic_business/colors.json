@@ -1,0 +1,22 @@
+{
+  "bg": "#F4F6F9",
+  "surface": "#FFFFFF",
+  "surface_alt": "#EEF2F7",
+  "text": "#1A2230",
+  "text_muted": "#6B7688",
+  "primary": "#1565C0",
+  "primary_hover": "#0D47A1",
+  "on_primary": "#FFFFFF",
+  "border": "#D8DEE7",
+  "input_bg": "#FFFFFF",
+  "danger": "#C62828",
+  "success": "#2E7D32",
+  "warning": "#F9A825",
+  "appbar_bg": "#1565C0",
+  "appbar_text": "#FFFFFF",
+  "sidebar_bg": "#0D47A1",
+  "sidebar_text": "#D6E2F5",
+  "sidebar_active_bg": "#1565C0",
+  "sidebar_active_text": "#FFFFFF",
+  "stat_accent": "#1565C0"
+}
