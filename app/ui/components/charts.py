@@ -33,8 +33,11 @@ class BarChart(QWidget):
         # العنوان
         painter.setPen(text_color)
         title_font = QFont(self.font())
+        base_pt = title_font.pointSize()
+        if base_pt <= 0:
+            base_pt = 10
         title_font.setBold(True)
-        title_font.setPointSize(self.font().pointSize() + 1)
+        title_font.setPointSize(base_pt + 1)
         painter.setFont(title_font)
         painter.drawText(
             QRectF(0, 4, w, 24), Qt.AlignmentFlag.AlignCenter, self._title
