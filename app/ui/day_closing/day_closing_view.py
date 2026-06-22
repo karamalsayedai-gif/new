@@ -40,9 +40,13 @@ class DayClosingView(QWidget):
         lay = self._card.layout()
         self._status_lbl = heading_label("")
         self._opening_lbl = QLabel("")
+        self._in_lbl = QLabel("")
+        self._out_lbl = QLabel("")
         self._expected_lbl = QLabel("")
         lay.addWidget(self._status_lbl)
         lay.addWidget(self._opening_lbl)
+        lay.addWidget(self._in_lbl)
+        lay.addWidget(self._out_lbl)
         lay.addWidget(self._expected_lbl)
 
         lay.addWidget(QLabel("النقد الفعلي المعدود"))
@@ -84,6 +88,13 @@ class DayClosingView(QWidget):
         )
         self._opening_lbl.setText(
             "رصيد الافتتاح: " + format_currency(day.opening_balance, symbol)
+        )
+        summary = self._c.treasury.day_summary(day.id)
+        self._in_lbl.setText(
+            "إجمالي القبض: " + format_currency(summary["in"], symbol)
+        )
+        self._out_lbl.setText(
+            "إجمالي الصرف: " + format_currency(summary["out"], symbol)
         )
         self._expected_lbl.setText(
             "النقد المتوقع: " + format_currency(expected, symbol)

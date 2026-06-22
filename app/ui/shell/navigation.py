@@ -15,6 +15,7 @@ from app.ui.day_closing.day_closing_view import DayClosingView
 from app.ui.modules.dashboard_view import DashboardView
 from app.ui.modules.placeholder_view import PlaceholderView
 from app.ui.settings.settings_view import SettingsView
+from app.ui.treasury.treasury_view import TreasuryView
 from app.ui.users.users_view import UsersView
 
 if TYPE_CHECKING:
@@ -62,7 +63,7 @@ def build_nav_items() -> list[NavItem]:
         ),
         NavItem(
             "treasury", "الخزينة", Permissions.TREASURY_VIEW,
-            _placeholder("الخزينة"),
+            lambda c: TreasuryView(c),
         ),
         NavItem(
             "expenses", "المصروفات والإيرادات", Permissions.EXPENSES_VIEW,

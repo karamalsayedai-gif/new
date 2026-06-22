@@ -9,12 +9,14 @@ from app.config import AppConfig
 from app.data.database import Database
 from app.data.repositories.day_closing_repository import DayClosingRepository
 from app.data.repositories.settings_repository import SettingsRepository
+from app.data.repositories.treasury_repository import TreasuryRepository
 from app.data.repositories.users_repository import UsersRepository
 from app.services.audit_service import AuditService
 from app.services.auth_service import AuthService
 from app.services.backup_service import BackupService
 from app.services.day_closing_service import DayClosingService
 from app.services.settings_service import SettingsService
+from app.services.treasury_service import TreasuryService
 from app.services.users_service import UsersService
 
 
@@ -27,6 +29,7 @@ class Container:
         self.settings_repo = SettingsRepository(self.db)
         self.users_repo = UsersRepository(self.db)
         self.day_closing_repo = DayClosingRepository(self.db)
+        self.treasury_repo = TreasuryRepository(self.db)
 
         # الخدمات
         self.audit = AuditService(self.db)
@@ -34,6 +37,9 @@ class Container:
         self.auth = AuthService(self.users_repo, self.audit)
         self.users = UsersService(self.users_repo, self.audit)
         self.day_closing = DayClosingService(self.day_closing_repo, self.audit)
+        self.treasury = TreasuryService(
+            self.treasury_repo, self.day_closing, self.audit
+        )
         self.backup = BackupService(self.db, self.settings, self.audit)
 
         # محرك القوالب يُهيّأ بعد إنشاء QApplication.
