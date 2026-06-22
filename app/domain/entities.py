@@ -75,6 +75,39 @@ class Customer:
 
 
 @dataclass
+class InventoryItem:
+    id: int
+    name: str
+    category: str = ""
+    unit: str = "قطعة"
+    quantity: float = 0.0
+    min_stock: float = 0.0
+    unit_cost: float = 0.0
+    sale_price: float = 0.0
+    status: str = "active"
+    created_at: str = ""
+
+    @property
+    def is_low(self) -> bool:
+        return self.min_stock > 0 and self.quantity <= self.min_stock
+
+    @staticmethod
+    def from_row(row: Mapping) -> "InventoryItem":
+        return InventoryItem(
+            id=row["id"],
+            name=row["name"],
+            category=row["category"] or "",
+            unit=row["unit"] or "قطعة",
+            quantity=row["quantity"] or 0.0,
+            min_stock=row["min_stock"] or 0.0,
+            unit_cost=row["unit_cost"] or 0.0,
+            sale_price=row["sale_price"] or 0.0,
+            status=row["status"] or "active",
+            created_at=row["created_at"] or "",
+        )
+
+
+@dataclass
 class Supplier:
     id: int
     name: str

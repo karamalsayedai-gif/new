@@ -43,3 +43,13 @@ class InstallmentStatus(StrEnum):
     PENDING = "pending"
     PAID = "paid"
     LATE = "late"
+
+
+class ItemStatus(StrEnum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+
+
+class StockDirection(StrEnum):
+    IN = "in"
+    OUT = "out"

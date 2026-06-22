@@ -5,6 +5,23 @@
 """
 from __future__ import annotations
 
+# جدول حركة المخزون — معرّف منفصلًا لإعادة استخدامه في الترقية (migrations).
+STOCK_MOVEMENTS_DDL = """
+    CREATE TABLE stock_movements (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id    INTEGER NOT NULL,
+        direction  TEXT NOT NULL,            -- in | out
+        quantity   REAL NOT NULL,
+        reason     TEXT,
+        ref_table  TEXT,
+        ref_id     INTEGER,
+        user_id    INTEGER,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (item_id) REFERENCES inventory_items(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+"""
+
 CREATE_STATEMENTS: list[str] = [
     # ── الأمن والصلاحيات ────────────────────────────────────────────────
     """
@@ -102,12 +119,16 @@ CREATE_STATEMENTS: list[str] = [
         id         INTEGER PRIMARY KEY AUTOINCREMENT,
         name       TEXT NOT NULL,
         category   TEXT,
+        unit       TEXT NOT NULL DEFAULT 'قطعة',
         quantity   REAL NOT NULL DEFAULT 0,
+        min_stock  REAL NOT NULL DEFAULT 0,
         unit_cost  REAL NOT NULL DEFAULT 0,
         sale_price REAL NOT NULL DEFAULT 0,
+        status     TEXT NOT NULL DEFAULT 'active',
         created_at TEXT NOT NULL
     );
     """,
+    STOCK_MOVEMENTS_DDL,
     """
     CREATE TABLE purchases (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -228,4 +249,5 @@ INDEX_STATEMENTS: list[str] = [
     "CREATE INDEX idx_treasury_day ON treasury(day_id);",
     "CREATE INDEX idx_installments_plan ON installments(plan_id);",
     "CREATE INDEX idx_audit_created ON audit_log(created_at);",
+    "CREATE INDEX idx_stock_movements_item ON stock_movements(item_id);",
 ]
