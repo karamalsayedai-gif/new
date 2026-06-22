@@ -75,6 +75,27 @@ class Customer:
 
 
 @dataclass
+class Supplier:
+    id: int
+    name: str
+    phone: str = ""
+    address: str = ""
+    balance: float = 0.0
+    created_at: str = ""
+
+    @staticmethod
+    def from_row(row: Mapping) -> "Supplier":
+        return Supplier(
+            id=row["id"],
+            name=row["name"],
+            phone=row["phone"] or "",
+            address=row["address"] or "",
+            balance=row["balance"] or 0.0,
+            created_at=row["created_at"] or "",
+        )
+
+
+@dataclass
 class DayClosing:
     id: int
     business_date: str

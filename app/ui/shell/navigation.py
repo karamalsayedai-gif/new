@@ -16,6 +16,7 @@ from app.ui.day_closing.day_closing_view import DayClosingView
 from app.ui.modules.dashboard_view import DashboardView
 from app.ui.modules.placeholder_view import PlaceholderView
 from app.ui.settings.settings_view import SettingsView
+from app.ui.suppliers.suppliers_view import SuppliersView
 from app.ui.treasury.treasury_view import TreasuryView
 from app.ui.users.users_view import UsersView
 
@@ -48,7 +49,7 @@ def build_nav_items() -> list[NavItem]:
         ),
         NavItem(
             "suppliers", "الموردون", Permissions.SUPPLIERS_VIEW,
-            _placeholder("الموردون"),
+            lambda c: SuppliersView(c),
         ),
         NavItem(
             "customers", "العملاء", Permissions.CUSTOMERS_VIEW,
