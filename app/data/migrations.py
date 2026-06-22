@@ -34,3 +34,10 @@ def run(db: "Database", old_version: int, new_version: int) -> None:
                 "CREATE INDEX IF NOT EXISTS idx_stock_movements_item "
                 "ON stock_movements(item_id)"
             )
+
+        # v2 -> v3: الحد الائتماني للعميل.
+        if old_version < 3:
+            conn.execute(
+                "ALTER TABLE customers ADD COLUMN credit_limit REAL NOT NULL "
+                "DEFAULT 0"
+            )

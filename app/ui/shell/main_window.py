@@ -1,7 +1,8 @@
-"""النافذة الرئيسية (App Shell): شريط علوي + شريط جانبي + منطقة محتوى متبدّلة.
+"""النافذة الرئيسية (App Shell): شريط علوي + شريط جانبي + منطقة محتوى كاملة.
 
-تُبنى عناصر التنقل من سجل التنقل وتُفلتر حسب صلاحيات المستخدم. موضع الشريط
-الجانبي وعرضه يُقرآن من تلميحات القالب الحالي، وتُعاد البناية عند تبديل القالب.
+تعتمد التنقّل بالصفحات الكاملة عبر ``Navigator``: نقر عنصر في الشريط الجانبي
+يعيد تعيين المحتوى لجذر تلك الوحدة، وأي تفاصيل/كشف حساب/سجل حركة يُدفع كصفحة
+كاملة فوقه (لا نوافذ منبثقة للشاشات الأساسية).
 """
 from __future__ import annotations
 
@@ -21,7 +22,8 @@ from PyQt6.QtWidgets import (
 )
 
 from app.config import AppConfig
-from app.ui.shell.navigation import NavItem, build_nav_items
+from app.ui.shell.navigation import build_nav_items
+from app.ui.shell.navigator import Navigator
 
 if TYPE_CHECKING:
     from app.core.container import Container
@@ -36,11 +38,14 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(AppConfig.APP_NAME_AR)
         self.resize(1180, 740)
 
-        self._stack = QStackedWidget()
-        self._key_to_index: dict[str, int] = {}
-        self._nav_buttons: list[QPushButton] = []
+        self._content = QStackedWidget()
+        self._navigator = Navigator(self._content)
+        self._c.navigator = self._navigator
+
+        self._nav_buttons: dict[str, QPushButton] = {}
         self._nav_group = QButtonGroup(self)
         self._nav_group.setExclusive(True)
+        self._current_key: str | None = None
 
         self._items = [
             item
@@ -49,8 +54,9 @@ class MainWindow(QMainWindow):
         ]
 
         self._build_layout()
+        if self._items:
+            self._open_module(self._items[0].key)
 
-        # إعادة ترتيب الشريط الجانبي عند تبديل القالب (قد يتغيّر موضعه).
         if self._c.theme is not None:
             self._c.theme.theme_changed.connect(self._on_theme_changed)
 
@@ -63,16 +69,6 @@ class MainWindow(QMainWindow):
         root.addWidget(self._build_appbar())
         root.addWidget(self._build_body(), stretch=1)
         self.setCentralWidget(central)
-
-        # بناء الصفحات في الـ Stack.
-        for item in self._items:
-            page = item.factory(self._c)
-            index = self._stack.addWidget(page)
-            self._key_to_index[item.key] = index
-
-        if self._nav_buttons:
-            self._nav_buttons[0].setChecked(True)
-            self._stack.setCurrentIndex(0)
 
     def _build_appbar(self) -> QWidget:
         bar = QFrame()
@@ -87,8 +83,7 @@ class MainWindow(QMainWindow):
 
         user = self._c.auth.current_user
         if user is not None:
-            who = QLabel(f"{user.full_name} ({user.role_name})")
-            layout.addWidget(who)
+            layout.addWidget(QLabel(f"{user.full_name} ({user.role_name})"))
 
         logout = QPushButton("خروج")
         logout.setObjectName("Ghost")
@@ -111,16 +106,20 @@ class MainWindow(QMainWindow):
         # في واجهة RTL: أول عنصر في التخطيط الأفقي يظهر على اليمين.
         if sidebar_on_right:
             layout.addWidget(sidebar)
-            layout.addWidget(self._stack, stretch=1)
+            layout.addWidget(self._content, stretch=1)
         else:
-            layout.addWidget(self._stack, stretch=1)
+            layout.addWidget(self._content, stretch=1)
             layout.addWidget(sidebar)
         return body
 
     def _build_sidebar(self) -> QWidget:
         frame = QFrame()
         frame.setObjectName("Sidebar")
-        width = int(self._c.theme.layout_hint("sidebar_width", 240)) if self._c.theme else 240
+        width = (
+            int(self._c.theme.layout_hint("sidebar_width", 240))
+            if self._c.theme
+            else 240
+        )
         frame.setFixedWidth(width)
 
         layout = QVBoxLayout(frame)
@@ -138,37 +137,32 @@ class MainWindow(QMainWindow):
             button.setObjectName("NavButton")
             button.setCheckable(True)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
-            button.clicked.connect(
-                lambda _checked, key=item.key: self._navigate(key)
-            )
+            button.clicked.connect(lambda _c, key=item.key: self._open_module(key))
             self._nav_group.addButton(button, position)
-            self._nav_buttons.append(button)
+            self._nav_buttons[item.key] = button
             layout.addWidget(button)
 
         layout.addStretch(1)
         return frame
 
-    # ── التنقل ──────────────────────────────────────────────────────────
-    def _navigate(self, key: str) -> None:
-        index = self._key_to_index.get(key)
-        if index is None:
+    # ── التنقل بين الوحدات ──────────────────────────────────────────────
+    def _open_module(self, key: str) -> None:
+        item = next((it for it in self._items if it.key == key), None)
+        if item is None:
             return
-        self._stack.setCurrentIndex(index)
-        page = self._stack.widget(index)
-        # تحديث الصفحة عند الدخول إن دعمت ذلك.
-        if hasattr(page, "refresh"):
-            page.refresh()
+        self._current_key = key
+        button = self._nav_buttons.get(key)
+        if button is not None:
+            button.setChecked(True)
+        # جذر جديد للوحدة (يُعاد بناؤه ببيانات حديثة) ويمسح أي صفحات تفاصيل.
+        self._navigator.reset_to(item.factory(self._c))
 
     def _on_theme_changed(self, _theme_id: str) -> None:
-        # إعادة بناء التخطيط لاحترام موضع/عرض الشريط الجانبي للقالب الجديد.
-        current_index = self._stack.currentIndex()
-        self._stack = QStackedWidget()
-        self._key_to_index.clear()
-        self._nav_buttons.clear()
-        for button in self._nav_group.buttons():
+        # إعادة بناء الهيكل لاحترام موضع/عرض الشريط الجانبي للقالب الجديد.
+        self._content = QStackedWidget()
+        self._navigator = Navigator(self._content)
+        self._c.navigator = self._navigator
+        for button in list(self._nav_group.buttons()):
             self._nav_group.removeButton(button)
         self._build_layout()
-        if 0 <= current_index < self._stack.count():
-            self._stack.setCurrentIndex(current_index)
-            if current_index < len(self._nav_buttons):
-                self._nav_buttons[current_index].setChecked(True)
+        self._open_module(self._current_key or (self._items[0].key if self._items else ""))

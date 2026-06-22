@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
-    QDialog,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -32,7 +31,8 @@ from PyQt6.QtWidgets import (
 from app.core.constants.permission_groups import group_label
 from app.core.constants.permissions import Permissions
 from app.services.users_service import UsersServiceError
-from app.ui.components.widgets import heading_label, title_label
+from app.ui.components.page import Page
+from app.ui.components.widgets import Card, heading_label, title_label
 
 if TYPE_CHECKING:
     from app.core.container import Container
@@ -118,9 +118,7 @@ class _UsersTab(QWidget):
         )
 
     def _add_user(self) -> None:
-        dialog = _AddUserDialog(self._c, self)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.refresh()
+        self._c.navigator.push(UserFormPage(self._c))
 
     def _toggle_active(self) -> None:
         sel = self._selected()
@@ -247,14 +245,14 @@ class _RolesTab(QWidget):
 
 
 # ── نافذة إضافة مستخدم ──────────────────────────────────────────────────
-class _AddUserDialog(QDialog):
-    def __init__(self, container: "Container", parent: QWidget):
-        super().__init__(parent)
+class UserFormPage(Page):
+    def __init__(self, container: "Container"):
+        super().__init__(container.navigator, "إضافة مستخدم")
         self._c = container
-        self.setWindowTitle("إضافة مستخدم")
-        self.setMinimumWidth(360)
 
-        form = QFormLayout(self)
+        card = Card()
+        form = QFormLayout()
+        card.layout().addLayout(form)
         self._username = QLineEdit()
         self._full_name = QLineEdit()
         self._password = QLineEdit()
@@ -273,10 +271,13 @@ class _AddUserDialog(QDialog):
         save.clicked.connect(self._save)
         cancel = QPushButton("إلغاء")
         cancel.setObjectName("Ghost")
-        cancel.clicked.connect(self.reject)
+        cancel.clicked.connect(self.go_back)
         buttons.addWidget(save)
         buttons.addWidget(cancel)
-        form.addRow(buttons)
+        buttons.addStretch(1)
+        card.layout().addLayout(buttons)
+        self.body.addWidget(card)
+        self.body.addStretch(1)
 
     def _save(self) -> None:
         actor = self._c.auth.current_user
@@ -291,4 +292,4 @@ class _AddUserDialog(QDialog):
         except UsersServiceError as exc:
             QMessageBox.warning(self, "تعذّر الحفظ", str(exc))
             return
-        self.accept()
+        self.go_back()

@@ -33,6 +33,18 @@ UI (presentation)  →  Services (business logic)  →  Repositories (data acces
 - التبديل وقت التشغيل من الإعدادات → `apply()` → إشارة `theme_changed` → إعادة
   بناء التخطيط (موضع/عرض الشريط الجانبي حسب القالب).
 
+## التنقّل (صفحات كاملة — لا نوافذ منبثقة)
+الشاشات الأساسية كلها صفحات كاملة داخل الـ app shell عبر `Navigator`
+(`app/ui/shell/navigator.py`) فوق `QStackedWidget`:
+- نقر عنصر في الشريط الجانبي → `reset_to(root)` لتلك الوحدة.
+- التفاصيل/النماذج/كشوف الحساب/سجلات الحركة → `push(page)` كصفحة كاملة مع زر رجوع
+  (`app/ui/components/page.py: Page`).
+- النوافذ المنبثقة محصورة في: تأكيد الحذف، رسالة خطأ، اختيار ملف نسخ/استعادة،
+  وإدخال كلمة مرور.
+- **شاشات الحسابات المستقلة:** `CustomerAccountPage` و`SupplierAccountPage`
+  (رصيد/حد ائتماني/فواتير/أقساط/مدفوعات/كشف حساب/طباعة/تصدير PDF).
+- الطباعة/التصدير عبر `app/ui/components/printing.py` (QTextDocument + QPrinter).
+
 ## المصادقة و RBAC
 `users → roles → role_permissions(code)`. كلمات المرور بـ PBKDF2-HMAC-SHA256.
 `AuthService.can(code)` + حراسة العناصر في الواجهة حسب الصلاحية. أدوار جاهزة:

@@ -66,6 +66,13 @@ class SuppliersService:
             entity_id=supplier_id,
         )
 
+    # ── كشف الحساب ──────────────────────────────────────────────────────
+    def purchases(self, supplier_id: int):
+        return self._repo.purchases(supplier_id)
+
+    def payments(self, supplier_id: int):
+        return self._repo.payments(supplier_id)
+
     def delete(self, supplier_id: int, actor_id: int | None = None) -> None:
         if self._repo.has_purchases(supplier_id):
             raise SuppliersServiceError(

@@ -27,3 +27,22 @@ def business_date_key(dt: datetime | date) -> str:
 
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
+
+
+def format_iso_date(value: str) -> str:
+    """تنسيق تاريخ مخزَّن كنص ISO إلى صيغة قصيرة (يتسامح مع القيم الفارغة)."""
+    if not value:
+        return ""
+    try:
+        return format_date(datetime.fromisoformat(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def format_iso_datetime(value: str) -> str:
+    if not value:
+        return ""
+    try:
+        return format_datetime(datetime.fromisoformat(value))
+    except (ValueError, TypeError):
+        return value

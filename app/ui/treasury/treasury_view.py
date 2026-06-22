@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QComboBox,
-    QDialog,
     QDoubleSpinBox,
     QFormLayout,
     QGridLayout,
@@ -27,7 +26,8 @@ from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency
 from app.domain.enums import DayStatus, TreasuryCategory, TreasuryDirection
 from app.services.treasury_service import TreasuryError
-from app.ui.components.widgets import StatCard, title_label
+from app.ui.components.page import Page
+from app.ui.components.widgets import Card, StatCard, title_label
 
 if TYPE_CHECKING:
     from app.core.container import Container
@@ -150,9 +150,7 @@ class TreasuryView(QWidget):
 
     # ── إجراءات ─────────────────────────────────────────────────────────
     def _add(self, direction: str) -> None:
-        dialog = _EntryDialog(self._c, direction, self)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            self.refresh()
+        self._c.navigator.push(TreasuryEntryPage(self._c, direction))
 
     def _delete_selected(self) -> None:
         row = self._table.currentRow()
@@ -177,15 +175,17 @@ class TreasuryView(QWidget):
         self.refresh()
 
 
-class _EntryDialog(QDialog):
-    def __init__(self, container: "Container", direction: str, parent: QWidget):
-        super().__init__(parent)
+class TreasuryEntryPage(Page):
+    def __init__(self, container: "Container", direction: str):
+        super().__init__(
+            container.navigator, _DIRECTION_AR.get(direction, "حركة") + " من الخزينة"
+        )
         self._c = container
         self._direction = direction
-        self.setWindowTitle(_DIRECTION_AR.get(direction, "حركة") + " من الخزينة")
-        self.setMinimumWidth(360)
 
-        form = QFormLayout(self)
+        card = Card()
+        form = QFormLayout()
+        card.layout().addLayout(form)
         self._amount = QDoubleSpinBox()
         self._amount.setRange(0.01, 1_000_000_000)
         self._amount.setDecimals(2)
@@ -198,7 +198,6 @@ class _EntryDialog(QDialog):
         self._category.addItem("تسوية", TreasuryCategory.MANUAL.value)
 
         self._notes = QLineEdit()
-
         form.addRow(QLabel("المبلغ"), self._amount)
         form.addRow(QLabel("التصنيف"), self._category)
         form.addRow(QLabel("ملاحظات"), self._notes)
@@ -208,10 +207,14 @@ class _EntryDialog(QDialog):
         save.clicked.connect(self._save)
         cancel = QPushButton("إلغاء")
         cancel.setObjectName("Ghost")
-        cancel.clicked.connect(self.reject)
+        cancel.clicked.connect(self.go_back)
         buttons.addWidget(save)
         buttons.addWidget(cancel)
-        form.addRow(buttons)
+        buttons.addStretch(1)
+        card.layout().addLayout(buttons)
+
+        self.body.addWidget(card)
+        self.body.addStretch(1)
 
     def _save(self) -> None:
         user = self._c.auth.current_user
@@ -226,4 +229,4 @@ class _EntryDialog(QDialog):
         except TreasuryError as exc:
             QMessageBox.warning(self, "تعذّر الحفظ", str(exc))
             return
-        self.accept()
+        self.go_back()

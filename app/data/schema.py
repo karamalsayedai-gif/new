@@ -147,13 +147,14 @@ CREATE_STATEMENTS: list[str] = [
     # ── العملاء ─────────────────────────────────────────────────────────
     """
     CREATE TABLE customers (
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
-        name        TEXT NOT NULL,
-        phone       TEXT,
-        national_id TEXT,
-        address     TEXT,
-        balance     REAL NOT NULL DEFAULT 0,
-        created_at  TEXT NOT NULL
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        name         TEXT NOT NULL,
+        phone        TEXT,
+        national_id  TEXT,
+        address      TEXT,
+        balance      REAL NOT NULL DEFAULT 0,
+        credit_limit REAL NOT NULL DEFAULT 0,
+        created_at   TEXT NOT NULL
     );
     """,
     # ── المبيعات ────────────────────────────────────────────────────────

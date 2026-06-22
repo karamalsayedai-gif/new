@@ -56,6 +56,26 @@ class SuppliersRepository(BaseRepository):
         row = self.db.query_one("SELECT COUNT(*) AS c FROM suppliers")
         return int(row["c"]) if row else 0
 
+    # ── كشف الحساب / الحركات ────────────────────────────────────────────
+    def purchases(self, supplier_id: int):
+        return self.db.query(
+            "SELECT * FROM purchases WHERE supplier_id=? ORDER BY id DESC",
+            (supplier_id,),
+        )
+
+    def payments(self, supplier_id: int):
+        """دفعات للمورّد مسجّلة في الخزينة (مرتبطة بمشترياته)."""
+        return self.db.query(
+            """
+            SELECT t.* FROM treasury t
+            WHERE t.ref_table = 'purchases' AND t.ref_id IN (
+                SELECT id FROM purchases WHERE supplier_id = ?
+            )
+            ORDER BY t.id DESC
+            """,
+            (supplier_id,),
+        )
+
     def adjust_balance(self, supplier_id: int, delta: float) -> None:
         """تعديل رصيد المورّد (يُستخدم لاحقًا من وحدة المشتريات)."""
         with self.db.transaction() as conn:

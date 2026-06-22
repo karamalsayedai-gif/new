@@ -59,10 +59,12 @@ class Customer:
     national_id: str = ""
     address: str = ""
     balance: float = 0.0
+    credit_limit: float = 0.0
     created_at: str = ""
 
     @staticmethod
     def from_row(row: Mapping) -> "Customer":
+        keys = row.keys()
         return Customer(
             id=row["id"],
             name=row["name"],
@@ -70,6 +72,7 @@ class Customer:
             national_id=row["national_id"] or "",
             address=row["address"] or "",
             balance=row["balance"] or 0.0,
+            credit_limit=(row["credit_limit"] if "credit_limit" in keys else 0.0) or 0.0,
             created_at=row["created_at"] or "",
         )
 

@@ -13,12 +13,13 @@ class CustomersRepository(BaseRepository):
         phone: str,
         national_id: str,
         address: str,
+        credit_limit: float,
         created_at: str,
     ) -> int:
         return self.db.insert(
             "INSERT INTO customers(name, phone, national_id, address, balance, "
-            "created_at) VALUES (?, ?, ?, ?, 0, ?)",
-            (name, phone, national_id, address, created_at),
+            "credit_limit, created_at) VALUES (?, ?, ?, ?, 0, ?, ?)",
+            (name, phone, national_id, address, credit_limit, created_at),
         )
 
     def update(
@@ -29,12 +30,13 @@ class CustomersRepository(BaseRepository):
         phone: str,
         national_id: str,
         address: str,
+        credit_limit: float,
     ) -> None:
         with self.db.transaction() as conn:
             conn.execute(
-                "UPDATE customers SET name=?, phone=?, national_id=?, address=? "
-                "WHERE id=?",
-                (name, phone, national_id, address, customer_id),
+                "UPDATE customers SET name=?, phone=?, national_id=?, address=?, "
+                "credit_limit=? WHERE id=?",
+                (name, phone, national_id, address, credit_limit, customer_id),
             )
 
     def delete(self, customer_id: int) -> None:
@@ -68,3 +70,36 @@ class CustomersRepository(BaseRepository):
     def count(self) -> int:
         row = self.db.query_one("SELECT COUNT(*) AS c FROM customers")
         return int(row["c"]) if row else 0
+
+    # ── كشف الحساب / الحركات ────────────────────────────────────────────
+    def sales(self, customer_id: int):
+        return self.db.query(
+            "SELECT * FROM sales WHERE customer_id=? ORDER BY id DESC",
+            (customer_id,),
+        )
+
+    def installments(self, customer_id: int):
+        return self.db.query(
+            """
+            SELECT i.*, s.id AS sale_id
+            FROM installments i
+            JOIN installment_plans p ON p.id = i.plan_id
+            JOIN sales s ON s.id = p.sale_id
+            WHERE s.customer_id = ?
+            ORDER BY i.due_date
+            """,
+            (customer_id,),
+        )
+
+    def payments(self, customer_id: int):
+        """مدفوعات العميل المسجّلة في الخزينة (مرتبطة بفواتيره)."""
+        return self.db.query(
+            """
+            SELECT t.* FROM treasury t
+            WHERE t.ref_table = 'sales' AND t.ref_id IN (
+                SELECT id FROM sales WHERE customer_id = ?
+            )
+            ORDER BY t.id DESC
+            """,
+            (customer_id,),
+        )

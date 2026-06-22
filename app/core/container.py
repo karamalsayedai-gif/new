@@ -56,6 +56,8 @@ class Container:
 
         # محرك القوالب يُهيّأ بعد إنشاء QApplication.
         self.theme = None
+        # مدير التنقّل بين الصفحات الكاملة (يُهيّأ في النافذة الرئيسية).
+        self.navigator = None
 
     def initialize(self) -> None:
         """تهيئة قاعدة البيانات وتحميل الإعدادات."""
