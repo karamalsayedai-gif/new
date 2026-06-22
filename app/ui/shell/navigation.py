@@ -37,6 +37,7 @@ class NavItem:
     label: str
     permission: str | None
     factory: Callable[["Container"], QWidget]
+    icon: str = ""
 
 
 def _placeholder(title: str, note: str | None = None) -> Callable[["Container"], QWidget]:
@@ -47,34 +48,34 @@ def _placeholder(title: str, note: str | None = None) -> Callable[["Container"],
 
 def build_nav_items() -> list[NavItem]:
     return [
-        NavItem("dashboard", "لوحة التحكم", None, lambda c: DashboardView(c)),
+        NavItem("dashboard", "لوحة التحكم", None, lambda c: DashboardView(c), "🏠"),
         NavItem(
             "inventory", "المخزون", Permissions.INVENTORY_VIEW,
-            lambda c: InventoryView(c),
+            lambda c: InventoryView(c), "📦",
         ),
         NavItem(
             "purchases", "المشتريات", Permissions.PURCHASES_VIEW,
-            lambda c: PurchasesView(c),
+            lambda c: PurchasesView(c), "🛒",
         ),
         NavItem(
             "suppliers", "الموردون", Permissions.SUPPLIERS_VIEW,
-            lambda c: SuppliersView(c),
+            lambda c: SuppliersView(c), "🚚",
         ),
         NavItem(
             "customers", "العملاء", Permissions.CUSTOMERS_VIEW,
-            lambda c: CustomersView(c),
+            lambda c: CustomersView(c), "👤",
         ),
         NavItem(
             "sales", "المبيعات", Permissions.SALES_CASH_VIEW,
-            lambda c: SalesView(c),
+            lambda c: SalesView(c), "🧾",
         ),
         NavItem(
             "installments", "التقسيط", Permissions.SALES_INSTALLMENT_VIEW,
-            lambda c: InstallmentsView(c),
+            lambda c: InstallmentsView(c), "📅",
         ),
         NavItem(
             "treasury", "الخزينة", Permissions.TREASURY_VIEW,
-            lambda c: TreasuryView(c),
+            lambda c: TreasuryView(c), "💵",
         ),
         NavItem(
             "expenses", "المصروفات والإيرادات", Permissions.EXPENSES_VIEW,
@@ -84,28 +85,30 @@ def build_nav_items() -> list[NavItem]:
                 "صرف/قبض بتصنيف مصروف أو إيراد.\nشاشة مخصّصة لتصنيفات المصروفات "
                 "والتقارير التفصيلية مُخطّطة كميزة مستقبلية.",
             ),
+            "💸",
         ),
         NavItem(
             "day_closing", "الإقفال اليومي", Permissions.DAY_CLOSE,
-            lambda c: DayClosingView(c),
+            lambda c: DayClosingView(c), "🔒",
         ),
         NavItem(
             "reports", "التقارير", Permissions.REPORTS_VIEW,
-            lambda c: ReportsView(c),
+            lambda c: ReportsView(c), "📊",
         ),
         NavItem(
-            "users", "المستخدمون", Permissions.USERS_VIEW, lambda c: UsersView(c)
+            "users", "المستخدمون", Permissions.USERS_VIEW, lambda c: UsersView(c),
+            "👥",
         ),
         NavItem(
             "audit", "سجل التدقيق", Permissions.AUDIT_VIEW,
-            lambda c: AuditView(c),
+            lambda c: AuditView(c), "📝",
         ),
         NavItem(
             "backup", "النسخ الاحتياطي", Permissions.BACKUP_MANAGE,
-            lambda c: BackupView(c),
+            lambda c: BackupView(c), "💾",
         ),
         NavItem(
             "settings", "الإعدادات", Permissions.SETTINGS_VIEW,
-            lambda c: SettingsView(c),
+            lambda c: SettingsView(c), "⚙️",
         ),
     ]

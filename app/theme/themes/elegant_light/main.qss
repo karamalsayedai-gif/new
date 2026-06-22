@@ -45,3 +45,36 @@ QTableWidget, QTableView {
 }
 QHeaderView::section { background: $surface_alt; color: $text; padding: 12px; border: none; font-weight: bold; }
 QTableWidget::item:selected, QTableView::item:selected { background: $primary; color: $on_primary; }
+
+/* ===== تلميع مشترك (RC1) ===== */
+QPushButton:pressed { padding-top: 1px; }
+QComboBox::drop-down { border: none; width: 22px; }
+QComboBox QAbstractItemView {
+    background: $surface; border: 1px solid $border;
+    selection-background-color: $primary; selection-color: $on_primary;
+    outline: none;
+}
+QScrollBar:vertical { background: transparent; width: 11px; margin: 2px; }
+QScrollBar::handle:vertical { background: $border; border-radius: 5px; min-height: 28px; }
+QScrollBar::handle:vertical:hover { background: $text_muted; }
+QScrollBar:horizontal { background: transparent; height: 11px; margin: 2px; }
+QScrollBar::handle:horizontal { background: $border; border-radius: 5px; min-width: 28px; }
+QScrollBar::handle:horizontal:hover { background: $text_muted; }
+QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
+QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
+QTabWidget::pane { border: 1px solid $border; border-radius: $radius; top: -1px; }
+QTabBar::tab {
+    background: $surface_alt; color: $text_muted; padding: 8px 18px;
+    border-top-left-radius: $radius; border-top-right-radius: $radius; margin-left: 2px;
+}
+QTabBar::tab:selected { background: $primary; color: $on_primary; }
+QHeaderView::section:hover { background: $primary; color: $on_primary; }
+QTableWidget { alternate-background-color: $surface_alt; }
+QToolTip { background: $surface; color: $text; border: 1px solid $border; padding: 4px; }
+QCheckBox::indicator, QRadioButton::indicator { width: 16px; height: 16px; }
+QMessageBox, QDialog { background: $bg; }
+QMenu { background: $surface; color: $text; border: 1px solid $border; }
+QMenu::item:selected { background: $primary; color: $on_primary; }
+QSpinBox::up-button, QSpinBox::down-button,
+QDoubleSpinBox::up-button, QDoubleSpinBox::down-button { width: 16px; }
+#SidebarBrand { padding-bottom: 6px; }

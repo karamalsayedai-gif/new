@@ -133,7 +133,8 @@ class MainWindow(QMainWindow):
 
         self._nav_buttons.clear()
         for position, item in enumerate(self._items):
-            button = QPushButton(item.label)
+            text = f"{item.icon}   {item.label}" if item.icon else item.label
+            button = QPushButton(text)
             button.setObjectName("NavButton")
             button.setCheckable(True)
             button.setCursor(Qt.CursorShape.PointingHandCursor)

@@ -1,17 +1,23 @@
-"""لوحة التحكم: بطاقات إحصائية سريعة + حالة اليوم."""
+"""لوحة التحكم: مؤشرات أداء + إجراءات سريعة + أحدث المبيعات."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from PyQt6.QtWidgets import (
     QGridLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
-from app.core.utils.formatters import format_currency
+from app.core.constants.permissions import Permissions
+from app.core.utils.formatters import format_currency, format_iso_date
 from app.domain.enums import DayStatus
-from app.ui.components.widgets import StatCard, muted_label, title_label
+from app.ui.components.widgets import StatCard, heading_label, muted_label, title_label
 
 if TYPE_CHECKING:
     from app.core.container import Container
@@ -20,41 +26,111 @@ if TYPE_CHECKING:
 class DashboardView(QWidget):
     def __init__(self, container: "Container"):
         super().__init__()
-        self._container = container
+        self._c = container
+        self._cards: dict[str, StatCard] = {}
         self._build()
         self.refresh()
 
     def _build(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 28, 28, 28)
+        layout.setContentsMargins(28, 24, 28, 26)
         layout.setSpacing(16)
 
-        user = self._container.auth.current_user
+        user = self._c.auth.current_user
         name = user.full_name if user else ""
         layout.addWidget(title_label(f"لوحة التحكم — أهلًا {name}"))
-        layout.addWidget(muted_label(self._container.settings.showroom_name))
+        layout.addWidget(muted_label(self._c.settings.showroom_name))
 
         grid = QGridLayout()
-        grid.setSpacing(16)
-        self._balance = StatCard("رصيد الصندوق")
-        self._day_status = StatCard("حالة اليوم")
-        self._expected_cash = StatCard("النقد المتوقع")
-        self._opening = StatCard("رصيد الافتتاح")
-        grid.addWidget(self._balance, 0, 0)
-        grid.addWidget(self._day_status, 0, 1)
-        grid.addWidget(self._expected_cash, 0, 2)
-        grid.addWidget(self._opening, 0, 3)
+        grid.setSpacing(14)
+        specs = [
+            ("balance", "رصيد الصندوق"), ("sales_today", "مبيعات اليوم"),
+            ("collections", "تحصيلات اليوم"), ("day", "حالة اليوم"),
+            ("customers", "عدد العملاء"), ("low", "أصناف ناقصة"),
+            ("overdue", "إجمالي المتأخرات"), ("expected", "النقد المتوقع"),
+        ]
+        for i, (key, label) in enumerate(specs):
+            card = StatCard(label)
+            self._cards[key] = card
+            grid.addWidget(card, i // 4, i % 4)
         layout.addLayout(grid)
-        layout.addStretch(1)
 
-    def refresh(self) -> None:
-        day = self._container.day_closing.get_or_open_today()
-        symbol = self._container.settings.currency_symbol
-        status_ar = "مفتوح" if day.status == DayStatus.OPEN.value else "مُقفل"
-        self._balance.set_value(
-            format_currency(self._container.treasury.current_balance(), symbol)
+        # إجراءات سريعة (حسب الصلاحيات)
+        actions = QHBoxLayout()
+        actions.addWidget(heading_label("إجراءات سريعة"))
+        actions.addSpacing(12)
+        if self._c.auth.can(Permissions.SALES_CASH_CREATE):
+            actions.addWidget(self._action("🧾  بيع جديد", self._new_sale))
+        if self._c.auth.can(Permissions.PURCHASES_MANAGE):
+            actions.addWidget(self._action("🛒  فاتورة شراء", self._new_purchase))
+        if self._c.auth.can(Permissions.CUSTOMERS_MANAGE):
+            actions.addWidget(self._action("👤  عميل جديد", self._new_customer))
+        actions.addStretch(1)
+        layout.addLayout(actions)
+
+        layout.addWidget(heading_label("أحدث المبيعات"))
+        self._recent = QTableWidget(0, 5)
+        self._recent.setHorizontalHeaderLabels(
+            ["رقم الفاتورة", "العميل", "التاريخ", "الإجمالي", "الحالة"]
         )
-        self._day_status.set_value(status_ar)
-        expected = self._container.day_closing.compute_expected_cash(day)
-        self._expected_cash.set_value(format_currency(expected, symbol))
-        self._opening.set_value(format_currency(day.opening_balance, symbol))
+        self._recent.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch
+        )
+        self._recent.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self._recent.setAlternatingRowColors(True)
+        layout.addWidget(self._recent, stretch=1)
+
+    def _action(self, text: str, slot) -> QPushButton:
+        btn = QPushButton(text)
+        btn.clicked.connect(slot)
+        return btn
+
+    # ── البيانات ────────────────────────────────────────────────────────
+    def refresh(self) -> None:
+        c = self._c
+        symbol = c.settings.currency_symbol
+        today = c.installments.today_key()
+        day = c.day_closing.get_or_open_today()
+        expected = c.day_closing.compute_expected_cash(day)
+        sales_today = c.reports.sales_report(today, today)["totals"]
+        treasury_today = c.reports.treasury_report(today, today)["totals"]
+        arrears = c.reports.arrears_report()
+
+        self._cards["balance"].set_value(format_currency(c.treasury.current_balance(), symbol))
+        self._cards["sales_today"].set_value(
+            f"{format_currency(sales_today['total'], symbol)}  ({sales_today['count']})"
+        )
+        self._cards["collections"].set_value(
+            format_currency(treasury_today["total_in"], symbol)
+        )
+        self._cards["day"].set_value(
+            "مفتوح" if day.status == DayStatus.OPEN.value else "مُقفل"
+        )
+        self._cards["customers"].set_value(str(c.customers.count()))
+        self._cards["low"].set_value(str(len(c.inventory.low_stock())))
+        self._cards["overdue"].set_value(
+            format_currency(arrears["total_overdue"], symbol)
+        )
+        self._cards["expected"].set_value(format_currency(expected, symbol))
+
+        recent = c.sales.list("")[:8]
+        self._recent.setRowCount(len(recent))
+        for r, s in enumerate(recent):
+            self._recent.setItem(r, 0, QTableWidgetItem(s.display_no))
+            self._recent.setItem(r, 1, QTableWidgetItem(s.customer_name or "نقدي"))
+            self._recent.setItem(r, 2, QTableWidgetItem(format_iso_date(s.date)))
+            self._recent.setItem(r, 3, QTableWidgetItem(format_currency(s.total, symbol)))
+            self._recent.setItem(r, 4, QTableWidgetItem(s.payment_status))
+
+    # ── إجراءات سريعة ───────────────────────────────────────────────────
+    def _new_sale(self) -> None:
+        from app.ui.sales.sales_view import SaleFormPage
+        self._c.navigator.push(SaleFormPage(self._c))
+
+    def _new_purchase(self) -> None:
+        from app.ui.purchases.purchases_view import PurchaseFormPage
+        self._c.navigator.push(PurchaseFormPage(self._c))
+
+    def _new_customer(self) -> None:
+        from app.ui.customers.customers_view import CustomerFormPage
+        self._c.navigator.push(CustomerFormPage(self._c, None))

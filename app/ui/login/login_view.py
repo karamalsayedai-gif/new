@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 )
 
 from app.services.auth_service import AuthError
+from app.ui.branding import application_icon
 from app.ui.components.widgets import Card, muted_label, title_label
 
 if TYPE_CHECKING:
@@ -36,11 +37,23 @@ class LoginView(QWidget):
         outer.addStretch(1)
 
         card = Card()
+        card.setFixedWidth(420)
         layout = card.layout()
 
-        layout.addWidget(title_label(self._container.settings.showroom_name))
-        layout.addWidget(muted_label("نظام إدارة معرض الدراجات النارية"))
-        layout.addSpacing(10)
+        logo = QLabel()
+        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        pix = application_icon().pixmap(72, 72)
+        if not pix.isNull():
+            logo.setPixmap(pix)
+            layout.addWidget(logo)
+
+        brand = title_label(self._container.settings.showroom_name)
+        brand.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        subtitle = muted_label("نظام إدارة معرض الدراجات النارية")
+        subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(brand)
+        layout.addWidget(subtitle)
+        layout.addSpacing(14)
 
         self._username = QLineEdit()
         self._username.setPlaceholderText("اسم المستخدم")
