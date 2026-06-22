@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import QWidget
 
 from app.core.constants.permissions import Permissions
 from app.ui.customers.customers_view import CustomersView
+from app.ui.audit.audit_view import AuditView
 from app.ui.backup.backup_view import BackupView
 from app.ui.day_closing.day_closing_view import DayClosingView
 from app.ui.installments.installments_view import InstallmentsView
@@ -90,7 +91,7 @@ def build_nav_items() -> list[NavItem]:
         ),
         NavItem(
             "audit", "سجل التدقيق", Permissions.AUDIT_VIEW,
-            _placeholder("سجل التدقيق"),
+            lambda c: AuditView(c),
         ),
         NavItem(
             "backup", "النسخ الاحتياطي", Permissions.BACKUP_MANAGE,
