@@ -10,12 +10,12 @@
 from __future__ import annotations
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication, QWidget
 
 from app.config import AppConfig
 from app.core.container import Container
 from app.theme.theme_manager import ThemeManager
+from app.ui.branding import application_icon, install_fonts
 from app.ui.login.login_view import LoginView
 from app.ui.setup.setup_view import SetupView
 from app.ui.shell.main_window import MainWindow
@@ -33,9 +33,8 @@ class Application:
         self._app = QApplication(self._argv)
         self._app.setApplicationName(AppConfig.APP_NAME)
         self._app.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-        font = QFont("Segoe UI")
-        font.setPointSize(10)
-        self._app.setFont(font)
+        self._app.setWindowIcon(application_icon())
+        install_fonts(self._app)
 
         self._theme = ThemeManager(self._app, self._container.settings)
         self._container.theme = self._theme
