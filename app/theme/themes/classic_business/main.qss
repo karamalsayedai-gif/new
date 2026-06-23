@@ -1,80 +1,89 @@
-/* ===== كلاسيكي للأعمال — بطاقات مرتفعة وحواف معتدلة، شريط جانبي داكن ===== */
+/* ============ قالب عصري احترافي (RC1-UI) ============ */
 * { font-family: "$font"; font-size: $base_size; }
 QWidget { background: $bg; color: $text; }
+QLabel { background: transparent; }            /* يمنع الصناديق البيضاء فوق الأشرطة الملوّنة */
 QMainWindow, QDialog { background: $bg; }
+QScrollArea { border: none; background: transparent; }
+QScrollArea > QWidget > QWidget { background: transparent; }
 
-#AppBar { background: $appbar_bg; }
-#AppBar QLabel { color: $appbar_text; }
-#AppTitle { color: $appbar_text; font-size: 18px; font-weight: bold; }
+/* ---- الشريط العلوي ---- */
+#AppBar { background: $appbar_bg; border-bottom: 1px solid $border; }
+#AppTitle { color: $appbar_text; font-size: 18px; font-weight: 800; }
+#UserChip { background: $surface_alt; color: $text; border: 1px solid $border;
+            border-radius: 16px; padding: 6px 14px; font-weight: 600; }
 
+/* ---- الشريط الجانبي ---- */
 #Sidebar { background: $sidebar_bg; }
-#SidebarBrand { color: $sidebar_active_text; font-size: 16px; font-weight: bold; padding: 16px; }
-#NavButton {
-    text-align: right; padding: $nav_pad; border: none; border-radius: $radius;
-    color: $sidebar_text; background: transparent;
-}
-#NavButton:hover { background: rgba(255,255,255,0.10); }
-#NavButton:checked { background: $sidebar_active_bg; color: $sidebar_active_text; font-weight: bold; }
+#SidebarBrand { color: $sidebar_active_text; font-size: 15px; font-weight: 800; padding: 18px 14px 10px 14px; }
+#NavButton { text-align: right; padding: $nav_pad; border: none; border-radius: $radius;
+             color: $sidebar_text; background: transparent; margin: 2px 8px; }
+#NavButton:hover { background: rgba(255,255,255,0.08); color: $sidebar_active_text; }
+#NavButton:checked { background: $sidebar_active_bg; color: $sidebar_active_text; font-weight: 700; }
 
-QPushButton {
-    background: $primary; color: $on_primary; border: none; border-radius: $radius;
-    padding: $btn_pad; font-weight: bold;
-}
+/* ---- الأزرار ---- */
+QPushButton { background: $primary; color: $on_primary; border: none; border-radius: $radius;
+              padding: $btn_pad; font-weight: 700; }
 QPushButton:hover { background: $primary_hover; }
+QPushButton:pressed { padding-top: 1px; }
 QPushButton:disabled { background: $border; color: $text_muted; }
 QPushButton#Ghost { background: transparent; color: $primary; border: 1px solid $primary; }
-QPushButton#Danger { background: $danger; }
+QPushButton#Ghost:hover { background: $surface_alt; }
+QPushButton#Danger { background: $danger; color: #FFFFFF; }
+QPushButton#Danger:hover { background: $danger; }
 
+/* ---- الحقول ---- */
 QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QPlainTextEdit, QTextEdit {
-    background: $input_bg; border: 1px solid $border; border-radius: $radius;
-    padding: $pad_v; color: $text; selection-background-color: $primary;
-}
-QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus { border: 1px solid $primary; }
+  background: $input_bg; border: 1px solid $border; border-radius: $radius; padding: $pad_v;
+  color: $text; selection-background-color: $primary; selection-color: $on_primary; }
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QDateEdit:focus,
+QPlainTextEdit:focus, QTextEdit:focus { border: 2px solid $primary; }
+QComboBox::drop-down { border: none; width: 22px; }
+QComboBox QAbstractItemView { background: $surface; border: 1px solid $border; outline: none;
+  selection-background-color: $primary; selection-color: $on_primary; }
+QSpinBox::up-button, QSpinBox::down-button,
+QDoubleSpinBox::up-button, QDoubleSpinBox::down-button { width: 18px; }
 
-#Card { background: $surface; border: 1px solid $border; border-radius: $radius_lg; }
-#StatCard { background: $surface; border: 1px solid $border; border-radius: $radius_lg; }
-#StatValue { font-size: $stat_value_size; font-weight: bold; color: $stat_accent; }
-#StatLabel { color: $text_muted; }
-#Title { font-size: $title_size; font-weight: bold; color: $text; }
-#Heading { font-size: $heading_size; font-weight: bold; color: $text; }
+/* ---- البطاقات والعناوين ---- */
+#Card, #StatCard { background: $surface; border: 1px solid $border; border-radius: $radius_lg; }
+#StatValue { font-size: $stat_value_size; font-weight: 800; color: $stat_accent; }
+#StatLabel { color: $text_muted; font-weight: 600; }
+#Title { font-size: $title_size; font-weight: 800; color: $text; }
+#Heading { font-size: $heading_size; font-weight: 700; color: $text; }
 #Muted { color: $text_muted; }
 
-QTableWidget, QTableView {
-    background: $surface; border: 1px solid $border; border-radius: $radius;
-    gridline-color: $border;
-}
-QHeaderView::section { background: $surface_alt; color: $text; padding: 9px; border: none; font-weight: bold; }
+/* ---- الجداول ---- */
+QTableWidget, QTableView { background: $surface; border: 1px solid $border; border-radius: $radius;
+  gridline-color: $border; alternate-background-color: $surface_alt; }
+QHeaderView::section { background: $surface_alt; color: $text; padding: 10px; border: none;
+  border-bottom: 2px solid $border; font-weight: 700; }
+QHeaderView::section:hover { background: $primary; color: $on_primary; }
+QTableWidget::item, QTableView::item { padding: 5px; }
 QTableWidget::item:selected, QTableView::item:selected { background: $primary; color: $on_primary; }
+QTableCornerButton::section { background: $surface_alt; border: none; }
 
-/* ===== تلميع مشترك (RC1) ===== */
-QPushButton:pressed { padding-top: 1px; }
-QComboBox::drop-down { border: none; width: 22px; }
-QComboBox QAbstractItemView {
-    background: $surface; border: 1px solid $border;
-    selection-background-color: $primary; selection-color: $on_primary;
-    outline: none;
-}
-QScrollBar:vertical { background: transparent; width: 11px; margin: 2px; }
-QScrollBar::handle:vertical { background: $border; border-radius: 5px; min-height: 28px; }
+/* ---- التبويبات ---- */
+QTabWidget::pane { border: 1px solid $border; border-radius: $radius; top: -1px; }
+QTabBar::tab { background: $surface_alt; color: $text_muted; padding: 9px 20px;
+  border-top-left-radius: $radius; border-top-right-radius: $radius; margin-left: 2px; font-weight: 600; }
+QTabBar::tab:selected { background: $primary; color: $on_primary; }
+
+/* ---- أشرطة التمرير ---- */
+QScrollBar:vertical { background: transparent; width: 12px; margin: 2px; }
+QScrollBar::handle:vertical { background: $border; border-radius: 6px; min-height: 30px; }
 QScrollBar::handle:vertical:hover { background: $text_muted; }
-QScrollBar:horizontal { background: transparent; height: 11px; margin: 2px; }
-QScrollBar::handle:horizontal { background: $border; border-radius: 5px; min-width: 28px; }
+QScrollBar:horizontal { background: transparent; height: 12px; margin: 2px; }
+QScrollBar::handle:horizontal { background: $border; border-radius: 6px; min-width: 30px; }
 QScrollBar::handle:horizontal:hover { background: $text_muted; }
 QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
 QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
-QTabWidget::pane { border: 1px solid $border; border-radius: $radius; top: -1px; }
-QTabBar::tab {
-    background: $surface_alt; color: $text_muted; padding: 8px 18px;
-    border-top-left-radius: $radius; border-top-right-radius: $radius; margin-left: 2px;
-}
-QTabBar::tab:selected { background: $primary; color: $on_primary; }
-QHeaderView::section:hover { background: $primary; color: $on_primary; }
-QTableWidget { alternate-background-color: $surface_alt; }
-QToolTip { background: $surface; color: $text; border: 1px solid $border; padding: 4px; }
+
+/* ---- متفرقات ---- */
+QToolTip { background: $surface; color: $text; border: 1px solid $border; padding: 5px; border-radius: 6px; }
 QCheckBox::indicator, QRadioButton::indicator { width: 16px; height: 16px; }
 QMessageBox, QDialog { background: $bg; }
 QMenu { background: $surface; color: $text; border: 1px solid $border; }
 QMenu::item:selected { background: $primary; color: $on_primary; }
-QSpinBox::up-button, QSpinBox::down-button,
-QDoubleSpinBox::up-button, QDoubleSpinBox::down-button { width: 16px; }
-#SidebarBrand { padding-bottom: 6px; }
+
+/* زر الخروج فوق الشريط العلوي الملوّن */
+#AppBar QPushButton#Ghost { color: $appbar_text; border: 1px solid $appbar_text; background: transparent; }
+#AppBar QPushButton#Ghost:hover { background: rgba(127,127,127,0.18); }

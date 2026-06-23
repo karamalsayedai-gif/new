@@ -6,7 +6,13 @@
 from __future__ import annotations
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QFrame,
+    QLabel,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 def title_label(text: str) -> QLabel:
@@ -62,6 +68,15 @@ class StatCard(QFrame):
 
     def set_value(self, value: str) -> None:
         self._value.setText(value)
+
+
+def scroll_area(content: QWidget) -> QScrollArea:
+    """يلفّ عنصرًا داخل منطقة تمرير عمودية بلا إطار (لتمرير الصفحات الطويلة)."""
+    sa = QScrollArea()
+    sa.setWidgetResizable(True)
+    sa.setFrameShape(QFrame.Shape.NoFrame)
+    sa.setWidget(content)
+    return sa
 
 
 def center(widget: QWidget) -> QWidget:

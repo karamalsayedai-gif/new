@@ -17,7 +17,13 @@ from PyQt6.QtWidgets import (
 from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
 from app.domain.enums import DayStatus
-from app.ui.components.widgets import StatCard, heading_label, muted_label, title_label
+from app.ui.components.widgets import (
+    StatCard,
+    heading_label,
+    muted_label,
+    scroll_area,
+    title_label,
+)
 
 if TYPE_CHECKING:
     from app.core.container import Container
@@ -32,9 +38,13 @@ class DashboardView(QWidget):
         self.refresh()
 
     def _build(self) -> None:
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 24, 28, 26)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(24, 18, 24, 20)
         layout.setSpacing(16)
+        outer.addWidget(scroll_area(content), stretch=1)
 
         user = self._c.auth.current_user
         name = user.full_name if user else ""

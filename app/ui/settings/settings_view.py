@@ -21,7 +21,13 @@ from PyQt6.QtWidgets import (
 
 from app.core.constants.permissions import Permissions
 from app.core.constants.setting_keys import SettingKeys
-from app.ui.components.widgets import Card, heading_label, muted_label, title_label
+from app.ui.components.widgets import (
+    Card,
+    heading_label,
+    muted_label,
+    scroll_area,
+    title_label,
+)
 
 if TYPE_CHECKING:
     from app.core.container import Container
@@ -34,11 +40,15 @@ class SettingsView(QWidget):
         self._build()
 
     def _build(self) -> None:
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 28, 28, 28)
-        layout.setSpacing(16)
-        layout.addWidget(title_label("الإعدادات"))
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(24, 18, 24, 20)
+        outer.setSpacing(12)
+        outer.addWidget(title_label("الإعدادات"))
 
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(14)
         layout.addWidget(self._company_card())
         layout.addWidget(self._theme_card())
         layout.addWidget(self._print_card())
@@ -47,6 +57,7 @@ class SettingsView(QWidget):
             muted_label("النسخ الاحتياطي والاستعادة في وحدة «النسخ الاحتياطي» المستقلة.")
         )
         layout.addStretch(1)
+        outer.addWidget(scroll_area(content), stretch=1)
 
     # ── قالب الطباعة ────────────────────────────────────────────────────
     def _print_card(self) -> Card:

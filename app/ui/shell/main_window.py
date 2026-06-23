@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
     QButtonGroup,
     QFrame,
@@ -54,11 +55,50 @@ class MainWindow(QMainWindow):
         ]
 
         self._build_layout()
+        self._install_shortcuts()
         if self._items:
             self._open_module(self._items[0].key)
 
         if self._c.theme is not None:
             self._c.theme.theme_changed.connect(self._on_theme_changed)
+
+    # ── اختصارات لوحة المفاتيح ───────────────────────────────────────────
+    def _install_shortcuts(self) -> None:
+        def add(seq: str, slot) -> None:
+            QShortcut(QKeySequence(seq), self, activated=slot)
+
+        add("Esc", lambda: self._navigator.pop())
+        add("Alt+Left", lambda: self._navigator.pop())
+        add("F5", self._refresh_current)
+        add("Ctrl+F", self._focus_search)
+        add("Ctrl+N", self._trigger_new)
+        # Alt+1..9 لفتح الوحدات بالترتيب.
+        for i in range(1, 10):
+            add(f"Alt+{i}", lambda idx=i - 1: self._open_index(idx))
+
+    def _open_index(self, idx: int) -> None:
+        if 0 <= idx < len(self._items):
+            self._open_module(self._items[idx].key)
+
+    def _refresh_current(self) -> None:
+        page = self._navigator.current()
+        if page is not None and hasattr(page, "refresh"):
+            page.refresh()
+
+    def _focus_search(self) -> None:
+        page = self._navigator.current()
+        search = getattr(page, "_search", None)
+        if search is not None:
+            search.setFocus()
+            search.selectAll()
+
+    def _trigger_new(self) -> None:
+        page = self._navigator.current()
+        for name in ("_new", "_add"):
+            fn = getattr(page, name, None)
+            if callable(fn):
+                fn()
+                return
 
     # ── البناء ──────────────────────────────────────────────────────────
     def _build_layout(self) -> None:
@@ -83,7 +123,9 @@ class MainWindow(QMainWindow):
 
         user = self._c.auth.current_user
         if user is not None:
-            layout.addWidget(QLabel(f"{user.full_name} ({user.role_name})"))
+            chip = QLabel(f"👤  {user.full_name} — {user.role_name}")
+            chip.setObjectName("UserChip")
+            layout.addWidget(chip)
 
         logout = QPushButton("خروج")
         logout.setObjectName("Ghost")

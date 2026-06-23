@@ -67,11 +67,15 @@ class PurchasesView(QWidget):
         new_btn.clicked.connect(self._new)
         open_btn = QPushButton("عرض الفاتورة")
         open_btn.clicked.connect(self._open)
+        ret_btn = QPushButton("مرتجع شراء")
+        ret_btn.setObjectName("Ghost")
+        ret_btn.setEnabled(self._can_manage)
+        ret_btn.clicked.connect(self._return_selected)
         del_btn = QPushButton("حذف")
         del_btn.setObjectName("Danger")
         del_btn.setEnabled(self._can_manage)
         del_btn.clicked.connect(self._delete)
-        for b in (new_btn, open_btn, del_btn):
+        for b in (new_btn, open_btn, ret_btn, del_btn):
             header.addWidget(b)
         layout.addLayout(header)
 
@@ -119,6 +123,14 @@ class PurchasesView(QWidget):
             QMessageBox.information(self, "تنبيه", "اختر فاتورة أولًا.")
             return
         self._c.navigator.push(PurchaseDetailPage(self._c, pid))
+
+    def _return_selected(self) -> None:
+        pid = self._selected_id()
+        if pid is None:
+            QMessageBox.information(self, "تنبيه", "اختر فاتورة لعمل مرتجع لها.")
+            return
+        from app.ui.returns.returns_view import PurchaseReturnPage
+        self._c.navigator.push(PurchaseReturnPage(self._c, pid))
 
     def _delete(self) -> None:
         pid = self._selected_id()

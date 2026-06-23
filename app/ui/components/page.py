@@ -1,16 +1,19 @@
-"""صفحة أساس بترويسة موحّدة (زر رجوع + عنوان + أزرار إجراءات).
+"""صفحة أساس بترويسة موحّدة (زر رجوع + عنوان + أزرار إجراءات) + محتوى قابل للتمرير.
 
 كل الشاشات الكاملة (القوائم، النماذج، الحسابات، الكشوف) ترث منها لتوحيد الشكل
-والسلوك. زر الرجوع يظهر فقط للصفحات الفرعية (المدفوعة فوق جذر الوحدة).
+والسلوك. منطقة المحتوى (``self.body``) داخل QScrollArea فتُمرَّر تلقائيًا عند
+طول المحتوى. زر الرجوع يظهر فقط للصفحات الفرعية.
 """
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from PyQt6.QtWidgets import (
+    QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -30,13 +33,13 @@ class Page(QWidget):
         super().__init__()
         self._navigator = navigator
         root = QVBoxLayout(self)
-        root.setContentsMargins(28, 22, 28, 26)
-        root.setSpacing(14)
+        root.setContentsMargins(24, 18, 24, 20)
+        root.setSpacing(12)
 
         header = QHBoxLayout()
         header.setSpacing(10)
         if show_back and navigator is not None:
-            back = QPushButton("رجوع")
+            back = QPushButton("◄ رجوع")
             back.setObjectName("Ghost")
             back.clicked.connect(navigator.pop)
             header.addWidget(back)
@@ -51,10 +54,16 @@ class Page(QWidget):
         header.addLayout(self._actions)
         root.addLayout(header)
 
-        # منطقة محتوى الصفحة (تضيف الفئات الفرعية عناصرها هنا).
-        self.body = QVBoxLayout()
+        # منطقة محتوى قابلة للتمرير.
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        self.body = QVBoxLayout(content)
+        self.body.setContentsMargins(2, 2, 2, 2)
         self.body.setSpacing(12)
-        root.addLayout(self.body, stretch=1)
+        scroll.setWidget(content)
+        root.addWidget(scroll, stretch=1)
 
     def add_action(self, button: QPushButton) -> None:
         self._actions.addWidget(button)

@@ -21,6 +21,9 @@ class Navigator:
     def depth(self) -> int:
         return len(self._pages)
 
+    def current(self) -> QWidget | None:
+        return self._pages[-1] if self._pages else None
+
     def can_go_back(self) -> bool:
         return len(self._pages) > 1
 
