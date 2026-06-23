@@ -31,6 +31,7 @@ from PyQt6.QtWidgets import (
 from app.core.constants.permission_groups import group_label
 from app.core.constants.permissions import Permissions
 from app.services.users_service import UsersServiceError
+from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
 from app.ui.components.widgets import Card, heading_label, title_label
 
@@ -66,9 +67,11 @@ class _UsersTab(QWidget):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(12)
 
-        header = QHBoxLayout()
-        header.addWidget(title_label("المستخدمون"))
-        header.addStretch(1)
+        title_row = QHBoxLayout()
+        title_row.addWidget(title_label("المستخدمون"))
+        title_row.addStretch(1)
+        layout.addLayout(title_row)
+
         add_btn = QPushButton("إضافة مستخدم")
         add_btn.setEnabled(self._can_manage)
         add_btn.clicked.connect(self._add_user)
@@ -80,9 +83,7 @@ class _UsersTab(QWidget):
         reset_btn.setObjectName("Ghost")
         reset_btn.setEnabled(self._can_manage)
         reset_btn.clicked.connect(self._reset_password)
-        for b in (add_btn, toggle_btn, reset_btn):
-            header.addWidget(b)
-        layout.addLayout(header)
+        layout.addWidget(toolbar([add_btn, toggle_btn, reset_btn]))
 
         self._table = QTableWidget(0, 5)
         self._table.setHorizontalHeaderLabels(

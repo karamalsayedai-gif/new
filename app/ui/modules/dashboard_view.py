@@ -1,6 +1,7 @@
 """لوحة التحكم: مؤشرات أداء + إجراءات سريعة + أحدث المبيعات."""
 from __future__ import annotations
 
+from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
 from PyQt6.QtWidgets import (
@@ -15,9 +16,13 @@ from PyQt6.QtWidgets import (
 )
 
 from app.core.constants.permissions import Permissions
+from app.core.constants.setting_keys import SettingKeys
 from app.core.utils.formatters import format_currency, format_iso_date
 from app.domain.enums import DayStatus
+from app.ui.components.charts import BarChart
+from app.ui.components.hero import HeroBanner
 from app.ui.components.widgets import (
+    Card,
     StatCard,
     heading_label,
     muted_label,
@@ -48,8 +53,13 @@ class DashboardView(QWidget):
 
         user = self._c.auth.current_user
         name = user.full_name if user else ""
-        layout.addWidget(title_label(f"لوحة التحكم — أهلًا {name}"))
-        layout.addWidget(muted_label(self._c.settings.showroom_name))
+        # بانر هندسي عصري بدل العنوان النصّي العادي.
+        self._hero = HeroBanner(
+            self._c,
+            f"أهلًا، {name}",
+            self._c.settings.showroom_name,
+        )
+        layout.addWidget(self._hero)
 
         grid = QGridLayout()
         grid.setSpacing(14)
@@ -77,6 +87,13 @@ class DashboardView(QWidget):
             actions.addWidget(self._action("👤  عميل جديد", self._new_customer))
         actions.addStretch(1)
         layout.addLayout(actions)
+
+        # مخطط مبيعات آخر 7 أيام داخل بطاقة.
+        chart_card = Card()
+        chart_card.layout().addWidget(heading_label("مبيعات آخر ٧ أيام"))
+        self._week_chart = BarChart("")
+        chart_card.layout().addWidget(self._week_chart)
+        layout.addWidget(chart_card)
 
         layout.addWidget(heading_label("أحدث المبيعات"))
         self._recent = QTableWidget(0, 5)
@@ -117,11 +134,26 @@ class DashboardView(QWidget):
             "مفتوح" if day.status == DayStatus.OPEN.value else "مُقفل"
         )
         self._cards["customers"].set_value(str(c.customers.count()))
-        self._cards["low"].set_value(str(len(c.inventory.low_stock())))
+        threshold = c.settings.get_int(SettingKeys.LOW_STOCK_THRESHOLD, 3)
+        self._cards["low"].set_value(str(len(c.inventory.low_stock(threshold))))
         self._cards["overdue"].set_value(
             format_currency(arrears["total_overdue"], symbol)
         )
         self._cards["expected"].set_value(format_currency(expected, symbol))
+
+        # مخطط آخر 7 أيام.
+        try:
+            base = date.fromisoformat(today)
+        except (ValueError, TypeError):
+            base = date.today()
+        days_ar = ["إثن", "ثلا", "أرب", "خمي", "جمع", "سبت", "أحد"]
+        series: list[tuple[str, float]] = []
+        for offset in range(6, -1, -1):
+            d = base - timedelta(days=offset)
+            key = d.isoformat()
+            total = c.reports.sales_report(key, key)["totals"]["total"] or 0
+            series.append((days_ar[d.weekday()], float(total)))
+        self._week_chart.set_data(series)
 
         recent = c.sales.list("")[:8]
         self._recent.setRowCount(len(recent))

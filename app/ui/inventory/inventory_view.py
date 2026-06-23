@@ -33,6 +33,7 @@ from app.core.utils.formatters import format_currency, format_iso_datetime, form
 from app.domain.entities import InventoryItem
 from app.domain.enums import ItemStatus, StockDirection
 from app.services.inventory_service import InventoryServiceError
+from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
 from app.ui.components.widgets import Card, title_label
 
@@ -57,9 +58,11 @@ class InventoryView(QWidget):
         layout.setContentsMargins(28, 24, 28, 26)
         layout.setSpacing(12)
 
-        header = QHBoxLayout()
-        header.addWidget(title_label("المخزون"))
-        header.addStretch(1)
+        title_row = QHBoxLayout()
+        title_row.addWidget(title_label("المخزون"))
+        title_row.addStretch(1)
+        layout.addLayout(title_row)
+
         add_btn = QPushButton("صنف جديد")
         add_btn.setEnabled(self._can_manage)
         add_btn.clicked.connect(self._add)
@@ -77,9 +80,9 @@ class InventoryView(QWidget):
         del_btn.setObjectName("Danger")
         del_btn.setEnabled(self._can_manage)
         del_btn.clicked.connect(self._delete)
-        for b in (add_btn, edit_btn, stock_btn, moves_btn, del_btn):
-            header.addWidget(b)
-        layout.addLayout(header)
+        layout.addWidget(
+            toolbar([add_btn, edit_btn, stock_btn, moves_btn, del_btn])
+        )
 
         filters = QHBoxLayout()
         self._search = QLineEdit()

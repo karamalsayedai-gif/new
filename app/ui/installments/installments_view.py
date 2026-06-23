@@ -32,6 +32,7 @@ from PyQt6.QtWidgets import (
 from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
 from app.services.installments_service import InstallmentsServiceError
+from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
 from app.ui.components.printing import build_invoice_html, export_pdf, print_html
 from app.ui.components.widgets import Card, StatCard, heading_label, title_label
@@ -66,14 +67,15 @@ class InstallmentsView(QWidget):
         layout.setContentsMargins(28, 24, 28, 26)
         layout.setSpacing(12)
 
-        header = QHBoxLayout()
-        header.addWidget(title_label("التقسيط"))
-        header.addStretch(1)
+        title_row = QHBoxLayout()
+        title_row.addWidget(title_label("التقسيط"))
+        title_row.addStretch(1)
+        layout.addLayout(title_row)
+
         self._search = QLineEdit()
         self._search.setPlaceholderText("بحث باسم العميل…")
-        self._search.setFixedWidth(220)
+        self._search.setMinimumWidth(200)
         self._search.textChanged.connect(self.refresh)
-        header.addWidget(self._search)
 
         new_btn = QPushButton("عقد تقسيط جديد")
         new_btn.setEnabled(self._can_create)
@@ -83,9 +85,7 @@ class InstallmentsView(QWidget):
         arrears_btn = QPushButton("المتأخرات")
         arrears_btn.setObjectName("Ghost")
         arrears_btn.clicked.connect(lambda: self._c.navigator.push(ArrearsPage(self._c)))
-        for b in (new_btn, open_btn, arrears_btn):
-            header.addWidget(b)
-        layout.addLayout(header)
+        layout.addWidget(toolbar([self._search, new_btn, open_btn, arrears_btn]))
 
         self._table = QTableWidget(0, 7)
         self._table.setHorizontalHeaderLabels(

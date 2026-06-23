@@ -29,6 +29,7 @@ from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
 from app.domain.entities import Supplier
 from app.services.suppliers_service import SuppliersServiceError
+from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
 from app.ui.components.printing import export_pdf, print_html
 from app.ui.components.widgets import Card, StatCard, heading_label, title_label
@@ -51,14 +52,15 @@ class SuppliersView(QWidget):
         layout.setContentsMargins(28, 24, 28, 26)
         layout.setSpacing(12)
 
-        header = QHBoxLayout()
-        header.addWidget(title_label("الموردون"))
-        header.addStretch(1)
+        title_row = QHBoxLayout()
+        title_row.addWidget(title_label("الموردون"))
+        title_row.addStretch(1)
+        layout.addLayout(title_row)
+
         self._search = QLineEdit()
         self._search.setPlaceholderText("بحث بالاسم أو الهاتف…")
-        self._search.setFixedWidth(260)
+        self._search.setMinimumWidth(220)
         self._search.textChanged.connect(self.refresh)
-        header.addWidget(self._search)
 
         add_btn = QPushButton("مورّد جديد")
         add_btn.setEnabled(self._can_manage)
@@ -69,9 +71,7 @@ class SuppliersView(QWidget):
         del_btn.setObjectName("Danger")
         del_btn.setEnabled(self._can_manage)
         del_btn.clicked.connect(self._delete)
-        for b in (add_btn, open_btn, del_btn):
-            header.addWidget(b)
-        layout.addLayout(header)
+        layout.addWidget(toolbar([self._search, add_btn, open_btn, del_btn]))
 
         self._table = QTableWidget(0, 4)
         self._table.setHorizontalHeaderLabels(

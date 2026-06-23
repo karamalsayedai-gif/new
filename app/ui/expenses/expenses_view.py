@@ -25,6 +25,7 @@ from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
 from app.domain.enums import TreasuryDirection
 from app.services.treasury_service import TreasuryError
+from app.ui.components.flow_layout import toolbar
 from app.ui.components.widgets import heading_label, title_label
 
 if TYPE_CHECKING:
@@ -46,21 +47,20 @@ class ExpensesView(QWidget):
         layout.setContentsMargins(28, 24, 28, 26)
         layout.setSpacing(12)
 
-        header = QHBoxLayout()
-        header.addWidget(title_label("المصروفات والإيرادات"))
-        header.addStretch(1)
+        title_row = QHBoxLayout()
+        title_row.addWidget(title_label("المصروفات والإيرادات"))
+        title_row.addStretch(1)
+        layout.addLayout(title_row)
+
         inc = QPushButton("قبض إيراد")
+        inc.setObjectName("Success")
         inc.setEnabled(self._can)
         inc.clicked.connect(lambda: self._add(TreasuryDirection.IN.value))
         exp = QPushButton("صرف مصروف")
         exp.setObjectName("Danger")
         exp.setEnabled(self._can)
         exp.clicked.connect(lambda: self._add(TreasuryDirection.OUT.value))
-        header.addWidget(inc)
-        header.addWidget(exp)
-        layout.addLayout(header)
 
-        filt = QHBoxLayout()
         today = QDate.currentDate()
         self._from = QDateEdit()
         self._from.setCalendarPopup(True)
@@ -69,19 +69,20 @@ class ExpensesView(QWidget):
         self._to.setCalendarPopup(True)
         self._to.setDate(today)
         run = QPushButton("عرض")
+        run.setObjectName("Ghost")
         run.clicked.connect(self.refresh)
-        filt.addWidget(QLabel("من"))
-        filt.addWidget(self._from)
-        filt.addWidget(QLabel("إلى"))
-        filt.addWidget(self._to)
-        filt.addWidget(run)
-        filt.addStretch(1)
         self._del = QPushButton("حذف المحدد")
-        self._del.setObjectName("Ghost")
+        self._del.setObjectName("Danger")
         self._del.setEnabled(self._can)
         self._del.clicked.connect(self._delete)
-        filt.addWidget(self._del)
-        layout.addLayout(filt)
+        layout.addWidget(
+            toolbar(
+                [
+                    inc, exp, QLabel("من"), self._from, QLabel("إلى"), self._to,
+                    run, self._del,
+                ]
+            )
+        )
 
         self._totals = heading_label("")
         layout.addWidget(self._totals)

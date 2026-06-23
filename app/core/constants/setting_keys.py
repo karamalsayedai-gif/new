@@ -18,6 +18,22 @@ class SettingKeys:
 
     # المظهر / القالب
     THEME_TEMPLATE = "theme_template"
+    THEME_PRIMARY = "theme_primary"  # لون أساسي مخصّص (hex) أو فارغ = ألوان القالب
+    THEME_ACCENT = "theme_accent"  # لون تمييز مخصّص (hex) أو فارغ
+    THEME_SHADE = "theme_shade"  # درجة اللون -100..100
+
+    # المخزون
+    LOW_STOCK_THRESHOLD = "low_stock_threshold"
+
+    # الضريبة
+    TAX_ENABLED = "tax_enabled"
+    TAX_PERCENT = "tax_percent"
+
+    # التقسيط الافتراضي
+    DEFAULT_INSTALLMENT_COUNT = "default_installment_count"
+
+    # شعار المعرض (مسار صورة للطباعة)
+    SHOWROOM_LOGO = "showroom_logo"
 
     # النسخ الاحتياطي
     BACKUP_MODE = "backup_mode"  # manual | auto
@@ -49,6 +65,14 @@ class SettingKeys:
         CURRENCY_SYMBOL: ("ج.م", "string"),
         DEFAULT_INTEREST_PCT: ("0", "double"),
         THEME_TEMPLATE: ("classic_business", "string"),
+        THEME_PRIMARY: ("", "string"),
+        THEME_ACCENT: ("", "string"),
+        THEME_SHADE: ("0", "int"),
+        LOW_STOCK_THRESHOLD: ("3", "int"),
+        TAX_ENABLED: ("false", "bool"),
+        TAX_PERCENT: ("0", "double"),
+        DEFAULT_INSTALLMENT_COUNT: ("6", "int"),
+        SHOWROOM_LOGO: ("", "string"),
         BACKUP_MODE: ("manual", "string"),
         BACKUP_INTERVAL_DAYS: ("1", "int"),
         BACKUP_ON_CLOSE: ("false", "bool"),

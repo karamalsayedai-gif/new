@@ -39,8 +39,8 @@ class InventoryService:
     def categories(self) -> list[str]:
         return self._repo.categories()
 
-    def low_stock(self) -> list[InventoryItem]:
-        return self._repo.list_low_stock()
+    def low_stock(self, default_threshold: int = 0) -> list[InventoryItem]:
+        return self._repo.list_low_stock(default_threshold)
 
     def count(self) -> int:
         return self._repo.count()

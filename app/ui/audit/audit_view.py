@@ -33,6 +33,7 @@ from app.core.constants.audit_labels import (
     operation_category,
 )
 from app.core.utils.formatters import format_iso_datetime
+from app.ui.components.flow_layout import toolbar
 from app.ui.components.printing import export_pdf
 from app.ui.components.widgets import Card, heading_label, muted_label, title_label
 
@@ -56,17 +57,17 @@ class AuditView(QWidget):
         layout.setContentsMargins(28, 24, 28, 26)
         layout.setSpacing(12)
 
-        header = QHBoxLayout()
-        header.addWidget(title_label("سجل التدقيق"))
-        header.addStretch(1)
+        title_row = QHBoxLayout()
+        title_row.addWidget(title_label("سجل التدقيق"))
+        title_row.addStretch(1)
+        layout.addLayout(title_row)
+
         pdf = QPushButton("تصدير PDF")
         pdf.clicked.connect(self._export_pdf)
         csv_btn = QPushButton("تصدير CSV")
         csv_btn.setObjectName("Ghost")
         csv_btn.clicked.connect(self._export_csv)
-        header.addWidget(pdf)
-        header.addWidget(csv_btn)
-        layout.addLayout(header)
+        layout.addWidget(toolbar([pdf, csv_btn]))
 
         layout.addWidget(self._filters_card())
 

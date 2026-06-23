@@ -50,9 +50,16 @@ class ThemeManager(QObject):
         return result
 
     # ── التطبيق ─────────────────────────────────────────────────────────
+    def _color_overrides(self) -> dict[str, str]:
+        return {
+            "primary": self._settings.get(SettingKeys.THEME_PRIMARY, ""),
+            "accent": self._settings.get(SettingKeys.THEME_ACCENT, ""),
+            "shade": self._settings.get(SettingKeys.THEME_SHADE, "0"),
+        }
+
     def apply(self, theme_id: str, *, persist: bool = True) -> None:
         theme_dir = self._resolve_dir(theme_id)
-        data = qss_loader.load_theme(theme_dir)
+        data = qss_loader.load_theme(theme_dir, self._color_overrides())
         self._current = data
         # تطبيق عالمي على كامل التطبيق.
         self._app.setStyleSheet(data.qss)
@@ -63,6 +70,29 @@ class ThemeManager(QObject):
     def apply_current(self) -> None:
         """تطبيق القالب المحفوظ في الإعدادات عند الإقلاع."""
         self.apply(self._settings.theme_template, persist=False)
+
+    def set_color_overrides(
+        self,
+        *,
+        primary: str | None = None,
+        accent: str | None = None,
+        shade: int | None = None,
+    ) -> None:
+        """حفظ تخصيص ألوان المستخدم وإعادة تطبيق القالب الحالي فورًا."""
+        if primary is not None:
+            self._settings.set(SettingKeys.THEME_PRIMARY, primary.strip())
+        if accent is not None:
+            self._settings.set(SettingKeys.THEME_ACCENT, accent.strip())
+        if shade is not None:
+            self._settings.set(SettingKeys.THEME_SHADE, str(int(shade)), "int")
+        self.apply_current()
+
+    def reset_color_overrides(self) -> None:
+        """استرجاع ألوان القالب الأصلية."""
+        self._settings.set(SettingKeys.THEME_PRIMARY, "")
+        self._settings.set(SettingKeys.THEME_ACCENT, "")
+        self._settings.set(SettingKeys.THEME_SHADE, "0", "int")
+        self.apply_current()
 
     # ── استعلامات ───────────────────────────────────────────────────────
     @property

@@ -100,11 +100,16 @@ class InventoryRepository(BaseRepository):
         )
         return [InventoryItem.from_row(r) for r in rows]
 
-    def list_low_stock(self) -> list[InventoryItem]:
+    def list_low_stock(self, default_threshold: int = 0) -> list[InventoryItem]:
+        # صنف يُعدّ ناقصًا إن كان له حد أدنى وتجاوزه، أو (إن لم يُحدَّد له حد)
+        # نزل عن حد التنبيه العام من الإعدادات.
         rows = self.db.query(
             "SELECT * FROM inventory_items "
-            "WHERE status='active' AND min_stock > 0 AND quantity <= min_stock "
-            "ORDER BY name"
+            "WHERE status='active' AND ("
+            "  (min_stock > 0 AND quantity <= min_stock)"
+            "  OR (min_stock = 0 AND ? > 0 AND quantity <= ?)"
+            ") ORDER BY name",
+            (default_threshold, default_threshold),
         )
         return [InventoryItem.from_row(r) for r in rows]
 

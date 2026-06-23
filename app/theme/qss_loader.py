@@ -17,6 +17,8 @@ from pathlib import Path
 from string import Template
 from typing import Any
 
+from app.theme import palette
+
 MANIFEST = "manifest.json"
 COLORS = "colors.json"
 METRICS = "metrics.json"
@@ -52,9 +54,14 @@ def collect_tokens(theme_dir: Path) -> dict[str, str]:
     return tokens
 
 
-def load_theme(theme_dir: Path) -> ThemeData:
+def load_theme(
+    theme_dir: Path,
+    overrides: dict[str, str] | None = None,
+) -> ThemeData:
     manifest = _read_json(theme_dir / MANIFEST)
     tokens = collect_tokens(theme_dir)
+    # دمج تخصيص ألوان المستخدم واشتقاق الدرجات/التدرّجات.
+    tokens = palette.derive_tokens(tokens, overrides)
     qss_raw = (theme_dir / MAIN_QSS).read_text(encoding="utf-8") if (
         theme_dir / MAIN_QSS
     ).exists() else ""

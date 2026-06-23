@@ -31,6 +31,7 @@ from PyQt6.QtWidgets import (
 from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
 from app.services.sales_service import SalesServiceError
+from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
 from app.ui.components.printing import build_invoice_html, print_html
 from app.ui.components.widgets import Card, StatCard, heading_label, title_label
@@ -53,21 +54,21 @@ class SalesView(QWidget):
         layout.setContentsMargins(28, 24, 28, 26)
         layout.setSpacing(12)
 
-        header = QHBoxLayout()
-        header.addWidget(title_label("المبيعات"))
-        header.addStretch(1)
+        title_row = QHBoxLayout()
+        title_row.addWidget(title_label("المبيعات"))
+        title_row.addStretch(1)
+        layout.addLayout(title_row)
+
         self._search = QLineEdit()
         self._search.setPlaceholderText("بحث باسم العميل أو رقم الفاتورة…")
-        self._search.setFixedWidth(240)
+        self._search.setMinimumWidth(220)
         self._search.textChanged.connect(self.refresh)
-        header.addWidget(self._search)
         self._status = QComboBox()
         self._status.addItem("كل الحالات", "")
         self._status.addItem("مدفوعة", "مدفوعة")
         self._status.addItem("آجل", "آجل")
         self._status.addItem("جزئي", "جزئي")
         self._status.currentIndexChanged.connect(self.refresh)
-        header.addWidget(self._status)
 
         new_btn = QPushButton("فاتورة بيع جديدة")
         new_btn.setEnabled(self._can_create)
@@ -75,16 +76,16 @@ class SalesView(QWidget):
         open_btn = QPushButton("عرض الفاتورة")
         open_btn.clicked.connect(self._open)
         ret_btn = QPushButton("مرتجع بيع")
-        ret_btn.setObjectName("Ghost")
+        ret_btn.setObjectName("Accent")
         ret_btn.setEnabled(self._can_create)
         ret_btn.clicked.connect(self._return_selected)
         del_btn = QPushButton("حذف")
         del_btn.setObjectName("Danger")
         del_btn.setEnabled(self._can_create)
         del_btn.clicked.connect(self._delete)
-        for b in (new_btn, open_btn, ret_btn, del_btn):
-            header.addWidget(b)
-        layout.addLayout(header)
+        layout.addWidget(
+            toolbar([self._search, self._status, new_btn, open_btn, ret_btn, del_btn])
+        )
 
         self._table = QTableWidget(0, 6)
         self._table.setHorizontalHeaderLabels(

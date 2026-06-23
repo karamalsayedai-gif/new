@@ -26,6 +26,7 @@ from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency
 from app.domain.enums import DayStatus, TreasuryCategory, TreasuryDirection
 from app.services.treasury_service import TreasuryError
+from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
 from app.ui.components.widgets import Card, StatCard, title_label
 
@@ -62,19 +63,21 @@ class TreasuryView(QWidget):
         layout.setContentsMargins(28, 28, 28, 28)
         layout.setSpacing(16)
 
-        header = QHBoxLayout()
-        header.addWidget(title_label("الخزينة الرئيسية"))
-        header.addStretch(1)
+        title_row = QHBoxLayout()
+        title_row.addWidget(title_label("الخزينة الرئيسية"))
+        title_row.addStretch(1)
+        layout.addLayout(title_row)
+
         can_manage = self._c.auth.can(Permissions.TREASURY_MANAGE)
         self._in_btn = QPushButton("قبض (إيداع)")
+        self._in_btn.setObjectName("Success")
         self._in_btn.clicked.connect(lambda: self._add(TreasuryDirection.IN.value))
         self._out_btn = QPushButton("صرف")
         self._out_btn.setObjectName("Danger")
         self._out_btn.clicked.connect(lambda: self._add(TreasuryDirection.OUT.value))
         for btn in (self._in_btn, self._out_btn):
             btn.setEnabled(can_manage)
-            header.addWidget(btn)
-        layout.addLayout(header)
+        layout.addWidget(toolbar([self._in_btn, self._out_btn]))
 
         grid = QGridLayout()
         grid.setSpacing(16)
