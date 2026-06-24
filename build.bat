@@ -1,61 +1,65 @@
 @echo off
-chcp 65001 >nul
 cd /d "%~dp0"
-title بناء نظام إدارة المعرض - ShowroomERP
+setlocal enabledelayedexpansion
+title ShowroomERP - Build
 
 echo ============================================================
-echo            بناء برنامج إدارة المعرض  (ShowroomERP)
+echo            ShowroomERP  -  Build EXE
 echo ============================================================
 echo.
 
-REM ---- 1) التأكد من وجود Python 3.12 ----
-py -3.12 --version >nul 2>&1
-if errorlevel 1 (
-  echo [خطأ] Python 3.12 غير مثبّت على الجهاز.
-  echo.
-  echo     ثبّته باحد الطريقتين ثم اعد تشغيل هذا الملف:
-  echo       1^) الامر:  py install 3.12
-  echo       2^) او نزّله من:  https://www.python.org/downloads/
-  echo          ^(اختر Add python to PATH اثناء التثبيت^)
-  echo.
-  echo     ملاحظة مهمة: لا تستخدم Python 3.14 - غير متوافق مع PyQt6.
+REM ---- Detect a working Python (prefer 3.12 / 3.13 / 3.11) ----
+set "PYCMD="
+for %%P in ("py -3.12" "py -3.13" "py -3.11" "py" "python") do (
+  if not defined PYCMD (
+    cmd /c %%~P --version >nul 2>&1
+    if !errorlevel! EQU 0 set "PYCMD=%%~P"
+  )
+)
+
+if not defined PYCMD (
+  echo [ERROR] Python was not found on this PC.
+  echo         Install Python 3.12 then run this file again:
+  echo            py install 3.12
+  echo         or download from https://www.python.org/downloads/
   echo.
   pause
   exit /b 1
 )
-for /f "delims=" %%v in ('py -3.12 --version') do echo [1/3] تم العثور على %%v
+
+for /f "delims=" %%v in ('%PYCMD% --version') do echo [1/3] Using %%v   ^(command: %PYCMD%^)
 echo.
 
-REM ---- 2) تثبيت المكتبات ----
-echo [2/3] تثبيت المكتبات المطلوبة... ^(قد ياخذ دقيقة^)
-py -3.12 -m pip install --upgrade pip
-py -3.12 -m pip install -r requirements.txt
-py -3.12 -m pip install pyinstaller
+echo [2/3] Installing required packages... ^(may take a minute^)
+%PYCMD% -m pip install --upgrade pip
+%PYCMD% -m pip install -r requirements.txt
+%PYCMD% -m pip install pyinstaller
 if errorlevel 1 (
   echo.
-  echo [خطأ] فشل تثبيت المكتبات. تاكد من اتصال الانترنت ثم اعد المحاولة.
+  echo [ERROR] Package installation failed.
+  echo         If it failed on PyQt6, install Python 3.12 ^(py install 3.12^)
+  echo         and run this file again.
   pause
   exit /b 1
 )
 echo.
 
-REM ---- 3) بناء البرنامج ----
-echo [3/3] جاري بناء البرنامج...
-py -3.12 -m PyInstaller packaging\showroom_erp.spec --noconfirm
+echo [3/3] Building the application...
+%PYCMD% -m PyInstaller packaging\showroom_erp.spec --noconfirm
 if errorlevel 1 (
   echo.
-  echo [خطأ] فشل البناء. انسخ نص الخطأ بالكامل وارسله.
+  echo [ERROR] Build failed. Copy the full error text above and send it.
   pause
   exit /b 1
 )
 
 echo.
 echo ============================================================
-echo   تم البناء بنجاح
-echo   البرنامج جاهز في:
+echo   BUILD SUCCESSFUL
+echo   App is ready at:
 echo   %~dp0dist\ShowroomERP\ShowroomERP.exe
 echo.
-echo   للتوزيع: انسخ الفولدر كامل  dist\ShowroomERP  على الفلاشة.
+echo   To deploy: copy the whole folder  dist\ShowroomERP  to a USB drive.
 echo ============================================================
 echo.
 explorer "%~dp0dist\ShowroomERP"

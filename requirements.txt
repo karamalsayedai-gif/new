@@ -1,8 +1,8 @@
-# واجهة سطح المكتب
-PyQt6==6.7.1
+# Desktop UI
+PyQt6>=6.7.1
 
-# التقارير والطباعة (تُستخدم في المرحلة 3)
-reportlab==4.2.2
+# Reports and printing
+reportlab>=4.2.2
 
-# التغليف لويندوز (بيئة التطوير فقط)
-# pyinstaller==6.10.0
+# Packaging for Windows (dev only)
+# pyinstaller>=6.10.0
