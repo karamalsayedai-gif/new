@@ -22,6 +22,19 @@ class CustomersService:
     def get(self, customer_id: int) -> Customer | None:
         return self._repo.find_by_id(customer_id)
 
+    def get_or_create_by_name(self, name: str, actor_id: int | None = None) -> int:
+        """يعيد معرّف عميل بالاسم؛ ينشئه تلقائيًا إن لم يكن موجودًا.
+
+        يتيح كتابة اسم العميل مباشرة في فاتورة البيع دون تسجيله مسبقًا.
+        """
+        name = name.strip()
+        if not name:
+            raise CustomersServiceError("اسم العميل مطلوب.")
+        for cust in self._repo.list_all(name):
+            if cust.name.strip() == name:
+                return cust.id
+        return self.create(name=name, actor_id=actor_id)
+
     def count(self) -> int:
         return self._repo.count()
 

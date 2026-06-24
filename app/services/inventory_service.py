@@ -36,6 +36,31 @@ class InventoryService:
     def get(self, item_id: int) -> InventoryItem | None:
         return self._repo.find_by_id(item_id)
 
+    def get_or_create_for_purchase(
+        self,
+        name: str,
+        *,
+        unit: str = "قطعة",
+        unit_cost: float = 0.0,
+        sale_price: float = 0.0,
+        actor_id: int | None = None,
+    ) -> int:
+        """يعيد معرّف صنف بالاسم؛ ينشئه برصيد صفر إن لم يكن موجودًا.
+
+        يتيح كتابة اسم الصنف وتفاصيله مباشرة في فاتورة الشراء دون تعريفه مسبقًا؛
+        الكمية تُضاف لاحقًا عبر حركة دخول الشراء نفسها (لا رصيد افتتاحي هنا).
+        """
+        name = name.strip()
+        if not name:
+            raise InventoryServiceError("اسم الصنف مطلوب.")
+        for it in self._repo.list_items(search=name):
+            if it.name.strip() == name:
+                return it.id
+        return self.create(
+            name=name, unit=unit, quantity=0.0, unit_cost=unit_cost,
+            sale_price=sale_price, actor_id=actor_id,
+        )
+
     def categories(self) -> list[str]:
         return self._repo.categories()
 

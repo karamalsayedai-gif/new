@@ -30,11 +30,19 @@ from PyQt6.QtWidgets import (
 
 from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
+from app.services.inventory_service import InventoryServiceError
 from app.services.purchases_service import PurchasesServiceError
+from app.services.suppliers_service import SuppliersServiceError
 from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
 from app.ui.components.printing import build_invoice_html, print_html
-from app.ui.components.widgets import Card, StatCard, heading_label, title_label
+from app.ui.components.widgets import (
+    Card,
+    StatCard,
+    heading_label,
+    muted_label,
+    title_label,
+)
 
 if TYPE_CHECKING:
     from app.core.container import Container
@@ -167,9 +175,17 @@ class PurchaseFormPage(Page):
         head = Card()
         form = QFormLayout()
         head.layout().addLayout(form)
+        # المورّد: قابل للكتابة المباشرة — اكتب اسمًا جديدًا أو اختر موجودًا.
         self._supplier = QComboBox()
+        self._supplier.setEditable(True)
+        self._supplier.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self._supplier.addItem("", None)
         for sup in self._c.suppliers.list():
             self._supplier.addItem(sup.name, sup.id)
+        self._supplier.setCurrentIndex(0)
+        self._supplier.lineEdit().setPlaceholderText(
+            "اكتب اسم المورّد مباشرة أو اختر من القائمة"
+        )
         self._notes = QLineEdit()
         form.addRow(QLabel("المورّد *"), self._supplier)
         form.addRow(QLabel("ملاحظات"), self._notes)
@@ -178,13 +194,27 @@ class PurchaseFormPage(Page):
         # بنّاء البنود
         builder = Card()
         builder.layout().addWidget(heading_label("بنود الفاتورة"))
+        builder.layout().addWidget(
+            muted_label(
+                "اكتب اسم الصنف مباشرة (هيتسجّل في المخزون تلقائيًا) أو اختر صنفًا موجودًا."
+            )
+        )
         line_row = QHBoxLayout()
+        # الصنف: قابل للكتابة المباشرة.
         self._item = QComboBox()
-        self._items_by_id: dict[int, object] = {}
+        self._item.setEditable(True)
+        self._item.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self._items_by_name: dict[str, object] = {}
+        self._item.addItem("", None)
         for it in self._c.inventory.list(status="active"):
-            self._item.addItem(f"{it.name} ({it.unit})", it.id)
-            self._items_by_id[it.id] = it
+            self._item.addItem(it.name, it.id)
+            self._items_by_name[it.name.strip()] = it
+        self._item.setCurrentIndex(0)
+        self._item.lineEdit().setPlaceholderText("اكتب اسم الصنف أو اختر")
         self._item.currentIndexChanged.connect(self._prefill_cost)
+        self._unit = QLineEdit("قطعة")
+        self._unit.setFixedWidth(90)
+        self._unit.setPlaceholderText("الوحدة")
         self._qty = QDoubleSpinBox()
         self._qty.setRange(0.01, 1_000_000_000)
         self._qty.setDecimals(2)
@@ -195,8 +225,8 @@ class PurchaseFormPage(Page):
         add_line = QPushButton("إضافة بند")
         add_line.clicked.connect(self._add_line)
         for w in (
-            QLabel("الصنف"), self._item, QLabel("الكمية"), self._qty,
-            QLabel("التكلفة"), self._cost, add_line,
+            QLabel("الصنف"), self._item, QLabel("الوحدة"), self._unit,
+            QLabel("الكمية"), self._qty, QLabel("التكلفة"), self._cost, add_line,
         ):
             line_row.addWidget(w)
         builder.layout().addLayout(line_row)
@@ -232,23 +262,37 @@ class PurchaseFormPage(Page):
         self._prefill_cost()
 
     def _prefill_cost(self) -> None:
-        item_id = self._item.currentData()
-        item = self._items_by_id.get(item_id) if item_id is not None else None
+        name = self._item.currentText().strip()
+        item = self._items_by_name.get(name)
         if item is not None:
             self._cost.setValue(item.unit_cost)
+            self._unit.setText(item.unit)
 
     def _add_line(self) -> None:
-        item_id = self._item.currentData()
-        if item_id is None:
-            QMessageBox.information(self, "تنبيه", "لا توجد أصناف. أضف أصنافًا أولًا.")
+        name = self._item.currentText().strip()
+        if not name:
+            QMessageBox.information(self, "تنبيه", "اكتب اسم الصنف أو اختره.")
             return
-        item = self._items_by_id[item_id]
-        line = {
-            "item_id": item_id,
-            "description": item.name,
-            "quantity": self._qty.value(),
-            "unit_cost": self._cost.value(),
-        }
+        existing = self._items_by_name.get(name)
+        if existing is not None:
+            line = {
+                "item_id": existing.id,
+                "description": existing.name,
+                "is_new": False,
+                "unit": existing.unit,
+                "quantity": self._qty.value(),
+                "unit_cost": self._cost.value(),
+            }
+        else:
+            # صنف جديد يُكتب مباشرة — سيُنشأ في المخزون عند الحفظ.
+            line = {
+                "item_id": None,
+                "description": name,
+                "is_new": True,
+                "unit": self._unit.text().strip() or "قطعة",
+                "quantity": self._qty.value(),
+                "unit_cost": self._cost.value(),
+            }
         self._lines.append(line)
         self._rebuild_lines()
 
@@ -257,7 +301,8 @@ class PurchaseFormPage(Page):
         self._lines_table.setRowCount(len(self._lines))
         for r, ln in enumerate(self._lines):
             total = ln["quantity"] * ln["unit_cost"]
-            self._lines_table.setItem(r, 0, QTableWidgetItem(ln["description"]))
+            label = ln["description"] + ("  (صنف جديد)" if ln.get("is_new") else "")
+            self._lines_table.setItem(r, 0, QTableWidgetItem(label))
             self._lines_table.setItem(r, 1, QTableWidgetItem(str(ln["quantity"])))
             self._lines_table.setItem(
                 r, 2, QTableWidgetItem(format_currency(ln["unit_cost"], symbol))
@@ -278,15 +323,35 @@ class PurchaseFormPage(Page):
 
     def _save(self) -> None:
         actor = self._c.auth.current_user
+        actor_id = actor.id if actor else None
+        if not self._lines:
+            QMessageBox.information(self, "تنبيه", "أضف بندًا واحدًا على الأقل.")
+            return
         try:
+            # 1) المورّد: يُنشأ تلقائيًا إن كُتب اسم جديد.
+            supplier_name = self._supplier.currentText().strip()
+            if not supplier_name:
+                QMessageBox.information(self, "تنبيه", "اكتب اسم المورّد أو اختره.")
+                return
+            supplier_id = self._c.suppliers.get_or_create_by_name(
+                supplier_name, actor_id
+            )
+            # 2) الأصناف الجديدة: تُنشأ في المخزون وتُربط بالبند.
+            for ln in self._lines:
+                if ln.get("item_id") is None:
+                    ln["item_id"] = self._c.inventory.get_or_create_for_purchase(
+                        ln["description"], unit=ln.get("unit", "قطعة"),
+                        unit_cost=ln["unit_cost"], actor_id=actor_id,
+                    )
+            # 3) ترحيل الفاتورة.
             self._c.purchases.create_purchase(
-                supplier_id=self._supplier.currentData(),
+                supplier_id=supplier_id,
                 lines=self._lines,
                 paid=self._paid.value(),
                 notes=self._notes.text().strip() or None,
-                actor_id=actor.id if actor else None,
+                actor_id=actor_id,
             )
-        except PurchasesServiceError as exc:
+        except (PurchasesServiceError, SuppliersServiceError, InventoryServiceError) as exc:
             QMessageBox.warning(self, "تعذّر الترحيل", str(exc))
             return
         QMessageBox.information(self, "تم", "تم ترحيل فاتورة الشراء.")

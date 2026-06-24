@@ -22,6 +22,19 @@ class SuppliersService:
     def get(self, supplier_id: int) -> Supplier | None:
         return self._repo.find_by_id(supplier_id)
 
+    def get_or_create_by_name(self, name: str, actor_id: int | None = None) -> int:
+        """يعيد معرّف مورّد بالاسم؛ ينشئه تلقائيًا إن لم يكن موجودًا.
+
+        يتيح كتابة اسم المورّد مباشرة في فاتورة الشراء دون تسجيله مسبقًا.
+        """
+        name = name.strip()
+        if not name:
+            raise SuppliersServiceError("اسم المورّد مطلوب.")
+        for sup in self._repo.list_all(name):
+            if sup.name.strip() == name:
+                return sup.id
+        return self.create(name=name, actor_id=actor_id)
+
     def count(self) -> int:
         return self._repo.count()
 

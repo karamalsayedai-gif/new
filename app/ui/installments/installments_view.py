@@ -31,6 +31,7 @@ from PyQt6.QtWidgets import (
 
 from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
+from app.services.customers_service import CustomersServiceError
 from app.services.installments_service import InstallmentsServiceError
 from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
@@ -137,9 +138,17 @@ class InstallmentFormPage(Page):
         head = Card()
         form = QFormLayout()
         head.layout().addLayout(form)
+        # العميل: قابل للكتابة المباشرة — اكتب اسمًا جديدًا أو اختر موجودًا.
         self._customer = QComboBox()
+        self._customer.setEditable(True)
+        self._customer.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self._customer.addItem("", None)
         for cust in self._c.customers.list():
             self._customer.addItem(cust.name, cust.id)
+        self._customer.setCurrentIndex(0)
+        self._customer.lineEdit().setPlaceholderText(
+            "اكتب اسم العميل مباشرة أو اختر من القائمة"
+        )
         self._notes = QLineEdit()
         form.addRow(QLabel("العميل *"), self._customer)
         form.addRow(QLabel("ملاحظات العقد"), self._notes)
@@ -274,18 +283,25 @@ class InstallmentFormPage(Page):
 
     def _save(self) -> None:
         actor = self._c.auth.current_user
+        actor_id = actor.id if actor else None
         try:
+            # العميل: يُنشأ تلقائيًا إن كُتب اسم جديد.
+            cust_text = self._customer.currentText().strip()
+            if not cust_text:
+                QMessageBox.information(self, "تنبيه", "اكتب اسم العميل أو اختره.")
+                return
+            customer_id = self._c.customers.get_or_create_by_name(cust_text, actor_id)
             self._c.installments.create_plan(
-                customer_id=self._customer.currentData(),
+                customer_id=customer_id,
                 lines=self._lines,
                 down_payment=self._down.value(),
                 months=self._months.value(),
                 interest=self._interest.value(),
                 first_due_date=self._first_due.date().toString("yyyy-MM-dd"),
                 notes=self._notes.text().strip() or None,
-                actor_id=actor.id if actor else None,
+                actor_id=actor_id,
             )
-        except InstallmentsServiceError as exc:
+        except (InstallmentsServiceError, CustomersServiceError) as exc:
             QMessageBox.warning(self, "تعذّر الإنشاء", str(exc))
             return
         QMessageBox.information(self, "تم", "تم إنشاء عقد التقسيط وترحيله.")

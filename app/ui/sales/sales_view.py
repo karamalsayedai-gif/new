@@ -30,6 +30,7 @@ from PyQt6.QtWidgets import (
 
 from app.core.constants.permissions import Permissions
 from app.core.utils.formatters import format_currency, format_iso_date
+from app.services.customers_service import CustomersServiceError
 from app.services.sales_service import SalesServiceError
 from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
@@ -174,10 +175,18 @@ class SaleFormPage(Page):
         head = Card()
         form = QFormLayout()
         head.layout().addLayout(form)
+        # العميل: قابل للكتابة المباشرة — اكتب اسمًا جديدًا أو اتركه نقدي.
+        self._cash_label = "بدون عميل (نقدي)"
         self._customer = QComboBox()
-        self._customer.addItem("بدون عميل (نقدي)", None)
+        self._customer.setEditable(True)
+        self._customer.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self._customer.addItem(self._cash_label, None)
         for cust in self._c.customers.list():
             self._customer.addItem(cust.name, cust.id)
+        self._customer.setCurrentIndex(0)
+        self._customer.lineEdit().setPlaceholderText(
+            "اكتب اسم العميل مباشرة أو اتركه نقدي"
+        )
         self._notes = QLineEdit()
         form.addRow(QLabel("العميل"), self._customer)
         form.addRow(QLabel("ملاحظات"), self._notes)
@@ -325,16 +334,25 @@ class SaleFormPage(Page):
             paid = self._paid.value()
 
         actor = self._c.auth.current_user
+        actor_id = actor.id if actor else None
         try:
+            # العميل: يُنشأ تلقائيًا إن كُتب اسم جديد؛ النص الافتراضي = بيع نقدي.
+            cust_text = self._customer.currentText().strip()
+            if not cust_text or cust_text == self._cash_label:
+                customer_id = None
+            else:
+                customer_id = self._c.customers.get_or_create_by_name(
+                    cust_text, actor_id
+                )
             self._c.sales.create_sale(
-                customer_id=self._customer.currentData(),
+                customer_id=customer_id,
                 lines=self._lines,
                 discount=self._discount.value(),
                 paid=paid,
                 notes=self._notes.text().strip() or None,
-                actor_id=actor.id if actor else None,
+                actor_id=actor_id,
             )
-        except SalesServiceError as exc:
+        except (SalesServiceError, CustomersServiceError) as exc:
             QMessageBox.warning(self, "تعذّر الترحيل", str(exc))
             return
         QMessageBox.information(self, "تم", "تم ترحيل فاتورة البيع.")
