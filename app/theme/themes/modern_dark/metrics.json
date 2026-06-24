@@ -1,8 +1,8 @@
 {
-  "radius": "12px",
-  "radius_lg": "18px",
-  "pad": "11px",
-  "pad_v": "10px",
-  "nav_pad": "13px 16px",
-  "btn_pad": "11px 20px"
+  "radius": "4px",
+  "radius_lg": "5px",
+  "pad": "8px",
+  "pad_v": "7px",
+  "nav_pad": "11px 14px",
+  "btn_pad": "8px 16px"
 }

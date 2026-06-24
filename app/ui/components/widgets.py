@@ -18,13 +18,8 @@ from PyQt6.QtWidgets import (
 
 
 def add_shadow(widget: QWidget, *, blur: int = 26, dy: int = 6, alpha: int = 38) -> None:
-    """ظل ناعم تحت العنصر (لإحساس العمق في الستايل الزجاجي)."""
-    effect = QGraphicsDropShadowEffect(widget)
-    effect.setBlurRadius(blur)
-    effect.setXOffset(0)
-    effect.setYOffset(dy)
-    effect.setColor(QColor(15, 23, 42, alpha))
-    widget.setGraphicsEffect(effect)
+    """الستايل التقليدي مسطّح بلا ظل — تُترك الدالة بلا تأثير للتوافق مع النداءات."""
+    return None
 
 
 def title_label(text: str) -> QLabel:

@@ -53,13 +53,9 @@ class DashboardView(QWidget):
 
         user = self._c.auth.current_user
         name = user.full_name if user else ""
-        # بانر هندسي عصري بدل العنوان النصّي العادي.
-        self._hero = HeroBanner(
-            self._c,
-            f"أهلًا، {name}",
-            self._c.settings.showroom_name,
-        )
-        layout.addWidget(self._hero)
+        # ترويسة نصّية تقليدية واضحة.
+        layout.addWidget(title_label(f"لوحة التحكم — أهلًا {name}"))
+        layout.addWidget(muted_label(self._c.settings.showroom_name))
 
         grid = QGridLayout()
         grid.setSpacing(14)

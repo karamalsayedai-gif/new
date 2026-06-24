@@ -11,8 +11,6 @@ from __future__ import annotations
 
 from PyQt6.QtWidgets import QStackedWidget, QWidget
 
-from app.ui.components.anim import fade_in
-
 
 class Navigator:
     def __init__(self, stack: QStackedWidget):
@@ -38,13 +36,11 @@ class Navigator:
         self._pages.append(widget)
         self._stack.addWidget(widget)
         self._stack.setCurrentWidget(widget)
-        fade_in(widget)
 
     def push(self, widget: QWidget) -> None:
         self._pages.append(widget)
         self._stack.addWidget(widget)
         self._stack.setCurrentWidget(widget)
-        fade_in(widget)
 
     def pop(self) -> None:
         if len(self._pages) <= 1:
