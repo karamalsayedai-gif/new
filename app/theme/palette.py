@@ -123,4 +123,23 @@ def derive_tokens(
     t["bg2"] = t.get("bg2") or mix(bg, accent, 0.05)
 
     t["stat_accent"] = t.get("stat_accent") or accent
+
+    # توكنز الستايل المينيمال + الزجاجي (Glass).
+    is_dark = luminance(bg) < 0.40
+    surface = t.get("surface", "#FFFFFF")
+    sr, sg, sb = hex_to_rgb(surface)
+    # خلفية الكروت شبه شفافة لإحساس الزجاج فوق الخلفية المتدرّجة.
+    glass_alpha = 0.55 if is_dark else 0.78
+    t["glass_bg"] = f"rgba({sr}, {sg}, {sb}, {glass_alpha})"
+    t["glass_border"] = (
+        "rgba(255, 255, 255, 0.10)" if is_dark else "rgba(255, 255, 255, 0.75)"
+    )
+    # خط فاصل رفيع وهادئ للستايل المينيمال.
+    t["hairline"] = mix(t.get("border", "#DDDDDD"), bg, 0.35)
+    # تظليل خفيف للكروت.
+    t["shadow"] = "rgba(0, 0, 0, 0.45)" if is_dark else "rgba(15, 23, 42, 0.12)"
+    # حبّة التحديد في القائمة الجانبية (شفافة ناعمة).
+    ar, ag, ab = hex_to_rgb(t.get("sidebar_active_bg", primary))
+    t["nav_active"] = f"rgba({ar}, {ag}, {ab}, 0.95)"
+    t["is_dark"] = "1" if is_dark else "0"
     return t

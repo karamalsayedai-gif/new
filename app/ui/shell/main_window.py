@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QMainWindow,
     QPushButton,
+    QScrollArea,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -164,14 +165,25 @@ class MainWindow(QMainWindow):
         )
         frame.setFixedWidth(width)
 
-        layout = QVBoxLayout(frame)
-        layout.setContentsMargins(6, 6, 6, 6)
-        layout.setSpacing(2)
+        outer = QVBoxLayout(frame)
+        outer.setContentsMargins(6, 6, 6, 6)
+        outer.setSpacing(2)
 
         brand = QLabel(AppConfig.APP_NAME_AR)
         brand.setObjectName("SidebarBrand")
         brand.setWordWrap(True)
-        layout.addWidget(brand)
+        outer.addWidget(brand)
+
+        # منطقة عناصر التنقّل قابلة للتمرير حتى لا تُقصّ على الشاشات القصيرة.
+        scroll = QScrollArea()
+        scroll.setObjectName("SidebarScroll")
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        nav_holder = QWidget()
+        layout = QVBoxLayout(nav_holder)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
 
         self._nav_buttons.clear()
         for position, item in enumerate(self._items):
@@ -186,6 +198,8 @@ class MainWindow(QMainWindow):
             layout.addWidget(button)
 
         layout.addStretch(1)
+        scroll.setWidget(nav_holder)
+        outer.addWidget(scroll, stretch=1)
         return frame
 
     # ── التنقل بين الوحدات ──────────────────────────────────────────────

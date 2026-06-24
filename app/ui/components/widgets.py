@@ -6,13 +6,25 @@
 from __future__ import annotations
 
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (
     QFrame,
+    QGraphicsDropShadowEffect,
     QLabel,
     QScrollArea,
     QVBoxLayout,
     QWidget,
 )
+
+
+def add_shadow(widget: QWidget, *, blur: int = 26, dy: int = 6, alpha: int = 38) -> None:
+    """ظل ناعم تحت العنصر (لإحساس العمق في الستايل الزجاجي)."""
+    effect = QGraphicsDropShadowEffect(widget)
+    effect.setBlurRadius(blur)
+    effect.setXOffset(0)
+    effect.setYOffset(dy)
+    effect.setColor(QColor(15, 23, 42, alpha))
+    widget.setGraphicsEffect(effect)
 
 
 def title_label(text: str) -> QLabel:
@@ -42,6 +54,7 @@ class Card(QFrame):
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(16, 16, 16, 16)
         self._layout.setSpacing(10)
+        add_shadow(self)
 
     def layout(self) -> QVBoxLayout:  # type: ignore[override]
         return self._layout
@@ -56,6 +69,7 @@ class StatCard(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(6)
+        add_shadow(self, blur=22, dy=5, alpha=30)
 
         self._value = QLabel(value)
         self._value.setObjectName("StatValue")

@@ -19,19 +19,24 @@ def application_icon() -> QIcon:
 
 
 def install_fonts(app: QApplication) -> str:
-    """يحمّل خطوط Cairo إن وُجدت ويضبط الخط الافتراضي. يعيد اسم العائلة المستخدمة."""
+    """يحمّل الخطوط المضمّنة ويضبط الخط الافتراضي (Tajawal أولًا).
+
+    يعيد اسم العائلة المستخدمة. القوالب تضع "Tajawal" أولًا في عائلة الخط.
+    """
     fonts_dir = resource_path("app", "assets", "fonts")
-    loaded_family: str | None = None
+    families: list[str] = []
     if fonts_dir.exists():
         for ttf in sorted(fonts_dir.glob("*.ttf")):
             font_id = QFontDatabase.addApplicationFont(str(ttf))
             if font_id != -1:
-                families = QFontDatabase.applicationFontFamilies(font_id)
-                if families and loaded_family is None:
-                    loaded_family = families[0]
+                families.extend(QFontDatabase.applicationFontFamilies(font_id))
 
-    family = loaded_family or "Segoe UI"
-    font = QFont(family)
+    # نفضّل Tajawal، ثم Cairo، ثم أي عائلة مُحمَّلة، وإلا خط النظام.
+    preferred = next(
+        (f for f in families if "Tajawal" in f),
+        next((f for f in families if "Cairo" in f), families[0] if families else "Segoe UI"),
+    )
+    font = QFont(preferred)
     font.setPointSize(10)
     app.setFont(font)
-    return family
+    return preferred
