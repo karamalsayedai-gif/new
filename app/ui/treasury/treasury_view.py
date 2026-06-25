@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (
     QComboBox,
     QDoubleSpinBox,
@@ -81,10 +82,10 @@ class TreasuryView(QWidget):
 
         grid = QGridLayout()
         grid.setSpacing(16)
-        self._balance_card = StatCard("رصيد الصندوق")
-        self._in_card = StatCard("إجمالي القبض اليوم")
-        self._out_card = StatCard("إجمالي الصرف اليوم")
-        self._net_card = StatCard("صافي اليوم")
+        self._balance_card = StatCard("رصيد الصندوق", icon="💰", tone="#4E63C7")
+        self._in_card = StatCard("إجمالي القبض اليوم", icon="⬆️", tone="#2E9E5B")
+        self._out_card = StatCard("إجمالي الصرف اليوم", icon="⬇️", tone="#E0584F")
+        self._net_card = StatCard("صافي اليوم", icon="📊", tone="#D9A441")
         grid.addWidget(self._balance_card, 0, 0)
         grid.addWidget(self._in_card, 0, 1)
         grid.addWidget(self._out_card, 0, 2)
@@ -146,9 +147,17 @@ class TreasuryView(QWidget):
             self._table.setItem(
                 r, 2, QTableWidgetItem(_CATEGORY_AR.get(row["category"], row["category"]))
             )
-            self._table.setItem(
-                r, 3, QTableWidgetItem(format_currency(row["amount"], symbol))
+            is_in = row["direction"] == TreasuryDirection.IN.value
+            amount_item = QTableWidgetItem(
+                ("+ " if is_in else "− ") + format_currency(row["amount"], symbol)
             )
+            amount_item.setForeground(
+                QColor("#1E8A4C" if is_in else "#D23A2E")
+            )
+            font = amount_item.font()
+            font.setBold(True)
+            amount_item.setFont(font)
+            self._table.setItem(r, 3, amount_item)
             self._table.setItem(r, 4, QTableWidgetItem(row["notes"] or ""))
 
     # ── إجراءات ─────────────────────────────────────────────────────────

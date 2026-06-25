@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from app.theme.palette import lighten
+from app.theme.palette import darken, lighten
 
 
 def _soft(hex_color: str) -> str:
@@ -100,39 +100,48 @@ class StatCard(QFrame):
     ):
         super().__init__(parent)
         self.setObjectName("StatCard")
-        self.setMinimumHeight(104)
-        add_shadow(self)
+        self.setMinimumHeight(96)
+        add_shadow(self, alpha=14)
 
-        row = QHBoxLayout(self)
-        row.setContentsMargins(20, 18, 20, 18)
-        row.setSpacing(14)
+        tone = tone or "#5B6473"
+        soft = _soft(tone)
+        brd = lighten(tone, 0.55)
+        val_color = darken(tone, 0.16)
+        # بطاقة ملوّنة بدرجة باستيل ناعمة (على نمط كروت الملخّص في التقارير).
+        self.setStyleSheet(
+            f"#StatCard {{ background: {soft}; border: 1px solid {brd};"
+            f" border-radius: 16px; }}"
+        )
 
-        texts = QVBoxLayout()
-        texts.setSpacing(6)
+        col = QVBoxLayout(self)
+        col.setContentsMargins(18, 16, 18, 16)
+        col.setSpacing(6)
+
+        top = QHBoxLayout()
+        top.setSpacing(8)
         self._label = QLabel(label)
         self._label.setObjectName("StatLabel")
+        self._label.setStyleSheet(f"color:{darken(tone, 0.05)}; font-weight:700;")
+        top.addWidget(self._label)
+        top.addStretch(1)
+        if icon:
+            chip = QLabel(icon)
+            chip.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            chip.setStyleSheet("background: transparent; font-size: 17px;")
+            top.addWidget(chip)
+        col.addLayout(top)
+
         self._value = QLabel(value)
         self._value.setObjectName("StatValue")
-        texts.addWidget(self._label)
-        texts.addWidget(self._value)
+        self._value.setStyleSheet(f"color:{val_color}; font-weight:800;")
+        col.addWidget(self._value)
+
         self._hint = QLabel(hint)
         self._hint.setObjectName("StatHint")
+        self._hint.setStyleSheet(f"color:{darken(tone, 0.02)};")
         self._hint.setVisible(bool(hint))
-        texts.addWidget(self._hint)
-        texts.addStretch(1)
-        row.addLayout(texts)
-        row.addStretch(1)
-
-        if icon:
-            tone = tone or "#8A90A0"
-            chip = QLabel(icon)
-            chip.setObjectName("StatChip")
-            chip.setFixedSize(52, 52)
-            chip.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            chip.setStyleSheet(
-                f"background:{_soft(tone)}; color:{tone}; border-radius:14px;"
-            )
-            row.addWidget(chip, alignment=Qt.AlignmentFlag.AlignTop)
+        col.addWidget(self._hint)
+        col.addStretch(1)
 
     def set_value(self, value: str) -> None:
         self._value.setText(value)
