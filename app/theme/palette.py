@@ -104,7 +104,7 @@ def derive_tokens(
     t["accent"] = accent
 
     # درجات اللون الأساسي.
-    t["on_primary"] = best_on(primary)
+    t.setdefault("on_primary", best_on(primary))
     t["primary_hover"] = darken(primary, 0.12)
     t["primary_dark"] = darken(primary, 0.24)
     t["primary_light"] = lighten(primary, 0.20)

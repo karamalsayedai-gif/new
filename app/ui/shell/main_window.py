@@ -127,11 +127,6 @@ class MainWindow(QMainWindow):
             chip = QLabel(f"👤  {user.full_name} — {user.role_name}")
             chip.setObjectName("UserChip")
             layout.addWidget(chip)
-
-        logout = QPushButton("خروج")
-        logout.setObjectName("Ghost")
-        logout.clicked.connect(self.logout_requested.emit)
-        layout.addWidget(logout)
         return bar
 
     def _build_body(self) -> QWidget:
@@ -200,6 +195,13 @@ class MainWindow(QMainWindow):
         layout.addStretch(1)
         scroll.setWidget(nav_holder)
         outer.addWidget(scroll, stretch=1)
+
+        # زر تسجيل الخروج أسفل القائمة (على نمط لوحات التحكم العصرية).
+        logout = QPushButton("⏻   تسجيل الخروج")
+        logout.setObjectName("SidebarLogout")
+        logout.setCursor(Qt.CursorShape.PointingHandCursor)
+        logout.clicked.connect(self.logout_requested.emit)
+        outer.addWidget(logout)
         return frame
 
     # ── التنقل بين الوحدات ──────────────────────────────────────────────

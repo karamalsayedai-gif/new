@@ -35,7 +35,13 @@ from app.services.sales_service import SalesServiceError
 from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
 from app.ui.components.printing import build_invoice_html, print_html
-from app.ui.components.widgets import Card, StatCard, heading_label, title_label
+from app.ui.components.widgets import (
+    Card,
+    StatCard,
+    heading_label,
+    status_pill,
+    title_label,
+)
 
 if TYPE_CHECKING:
     from app.core.container import Container
@@ -116,7 +122,10 @@ class SalesView(QWidget):
             self._table.setItem(r, 2, QTableWidgetItem(format_iso_date(s.date)))
             self._table.setItem(r, 3, QTableWidgetItem(format_currency(s.total, symbol)))
             self._table.setItem(r, 4, QTableWidgetItem(format_currency(s.paid, symbol)))
-            self._table.setItem(r, 5, QTableWidgetItem(s.payment_status))
+            kind = {"مدفوعة": "success", "جزئي": "warning", "آجل": "danger"}.get(
+                s.payment_status, "muted"
+            )
+            self._table.setCellWidget(r, 5, status_pill(s.payment_status, kind))
 
     def _selected_id(self) -> int | None:
         row = self._table.currentRow()

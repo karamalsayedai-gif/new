@@ -10,16 +10,43 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (
     QFrame,
     QGraphicsDropShadowEffect,
+    QHBoxLayout,
     QLabel,
     QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
+from app.theme.palette import lighten
 
-def add_shadow(widget: QWidget, *, blur: int = 26, dy: int = 6, alpha: int = 38) -> None:
-    """الستايل التقليدي مسطّح بلا ظل — تُترك الدالة بلا تأثير للتوافق مع النداءات."""
-    return None
+
+def _soft(hex_color: str) -> str:
+    """خلفية باستيل ناعمة مشتقّة من لون الأيقونة (لمربّع الأيقونة في البطاقات)."""
+    return lighten(hex_color, 0.82)
+
+
+def status_pill(text: str, kind: str = "muted") -> QLabel:
+    """شارة حالة دائرية ملوّنة (success / warning / danger / muted)."""
+    names = {
+        "success": "PillSuccess",
+        "warning": "PillWarning",
+        "danger": "PillDanger",
+        "muted": "PillMuted",
+    }
+    label = QLabel(text)
+    label.setObjectName(names.get(kind, "PillMuted"))
+    label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    return label
+
+
+def add_shadow(widget: QWidget, *, blur: int = 22, dy: int = 4, alpha: int = 22) -> None:
+    """ظل ناعم خفيف تحت الكروت (إحساس العمق الهادئ في لوحات التحكم العصرية)."""
+    effect = QGraphicsDropShadowEffect(widget)
+    effect.setBlurRadius(blur)
+    effect.setXOffset(0)
+    effect.setYOffset(dy)
+    effect.setColor(QColor(17, 24, 39, alpha))
+    widget.setGraphicsEffect(effect)
 
 
 def title_label(text: str) -> QLabel:
@@ -56,27 +83,62 @@ class Card(QFrame):
 
 
 class StatCard(QFrame):
-    """بطاقة إحصائية للوحة التحكم: قيمة كبيرة + عنوان."""
+    """بطاقة إحصائية للوحة التحكم: عنوان + قيمة كبيرة + أيقونة ملوّنة اختيارية.
 
-    def __init__(self, label: str, value: str = "0", parent: QWidget | None = None):
+    على نمط لوحات التحكم العصرية: العنوان والقيمة على جهة، وأيقونة داخل مربّع
+    بخلفية باستيل ناعمة على الجهة الأخرى.
+    """
+
+    def __init__(
+        self,
+        label: str,
+        value: str = "0",
+        icon: str = "",
+        tone: str = "",
+        hint: str = "",
+        parent: QWidget | None = None,
+    ):
         super().__init__(parent)
         self.setObjectName("StatCard")
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(18, 18, 18, 18)
-        layout.setSpacing(6)
-        add_shadow(self, blur=22, dy=5, alpha=30)
+        add_shadow(self)
 
-        self._value = QLabel(value)
-        self._value.setObjectName("StatValue")
+        row = QHBoxLayout(self)
+        row.setContentsMargins(18, 16, 18, 16)
+        row.setSpacing(12)
+
+        texts = QVBoxLayout()
+        texts.setSpacing(4)
         self._label = QLabel(label)
         self._label.setObjectName("StatLabel")
+        self._value = QLabel(value)
+        self._value.setObjectName("StatValue")
+        texts.addWidget(self._label)
+        texts.addWidget(self._value)
+        self._hint = QLabel(hint)
+        self._hint.setObjectName("StatHint")
+        self._hint.setVisible(bool(hint))
+        texts.addWidget(self._hint)
+        texts.addStretch(1)
+        row.addLayout(texts)
+        row.addStretch(1)
 
-        layout.addWidget(self._value)
-        layout.addWidget(self._label)
-        layout.addStretch(1)
+        if icon:
+            tone = tone or "#8A90A0"
+            chip = QLabel(icon)
+            chip.setObjectName("StatChip")
+            chip.setFixedSize(46, 46)
+            chip.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            chip.setStyleSheet(
+                f"background:{_soft(tone)}; color:{tone}; border-radius:12px;"
+            )
+            row.addWidget(chip, alignment=Qt.AlignmentFlag.AlignTop)
 
     def set_value(self, value: str) -> None:
         self._value.setText(value)
+
+    def set_hint(self, hint: str) -> None:
+        self._hint.setText(hint)
+        self._hint.setVisible(bool(hint))
 
 
 def scroll_area(content: QWidget) -> QScrollArea:

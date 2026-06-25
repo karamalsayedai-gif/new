@@ -27,6 +27,7 @@ from app.ui.components.widgets import (
     heading_label,
     muted_label,
     scroll_area,
+    status_pill,
     title_label,
 )
 
@@ -60,13 +61,17 @@ class DashboardView(QWidget):
         grid = QGridLayout()
         grid.setSpacing(14)
         specs = [
-            ("balance", "رصيد الصندوق"), ("sales_today", "مبيعات اليوم"),
-            ("collections", "تحصيلات اليوم"), ("day", "حالة اليوم"),
-            ("customers", "عدد العملاء"), ("low", "أصناف ناقصة"),
-            ("overdue", "إجمالي المتأخرات"), ("expected", "النقد المتوقع"),
+            ("balance", "رصيد الصندوق", "💰", "#C7A24E"),
+            ("sales_today", "مبيعات اليوم", "🧾", "#2E9E5B"),
+            ("collections", "تحصيلات اليوم", "💵", "#3F7CC2"),
+            ("day", "حالة اليوم", "📅", "#7C5CD0"),
+            ("customers", "عدد العملاء", "👥", "#2BB3A3"),
+            ("low", "أصناف ناقصة", "⚠️", "#E08A3C"),
+            ("overdue", "إجمالي المتأخرات", "⏰", "#E0584F"),
+            ("expected", "النقد المتوقع", "📈", "#4E63C7"),
         ]
-        for i, (key, label) in enumerate(specs):
-            card = StatCard(label)
+        for i, (key, label, icon, tone) in enumerate(specs):
+            card = StatCard(label, icon=icon, tone=tone)
             self._cards[key] = card
             grid.addWidget(card, i // 4, i % 4)
         layout.addLayout(grid)
@@ -158,7 +163,10 @@ class DashboardView(QWidget):
             self._recent.setItem(r, 1, QTableWidgetItem(s.customer_name or "نقدي"))
             self._recent.setItem(r, 2, QTableWidgetItem(format_iso_date(s.date)))
             self._recent.setItem(r, 3, QTableWidgetItem(format_currency(s.total, symbol)))
-            self._recent.setItem(r, 4, QTableWidgetItem(s.payment_status))
+            kind = {"مدفوعة": "success", "جزئي": "warning", "آجل": "danger"}.get(
+                s.payment_status, "muted"
+            )
+            self._recent.setCellWidget(r, 4, status_pill(s.payment_status, kind))
 
     # ── إجراءات سريعة ───────────────────────────────────────────────────
     def _new_sale(self) -> None:

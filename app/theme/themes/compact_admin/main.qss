@@ -1,6 +1,6 @@
 /* ============================================================
-   ستايل محاسبي/كاشير تقليدي مألوف — مسطّح بإطارات واضحة
-   ألوان محايدة، تباين عالٍ، جداول كثيفة. كل القيم من توكنز القالب.
+   ستايل لوحة تحكم عصرية نظيفة (مرجع العميل): شريط جانبي داكن +
+   لون مميّز، كروت بيضاء دائرية بظل خفيف، جداول نظيفة، شارات حالة.
    ============================================================ */
 * { font-family: "$font"; font-size: $base_size; outline: none; }
 QWidget { background: $bg; color: $text; }
@@ -10,123 +10,121 @@ QScrollArea { border: none; background: transparent; }
 QScrollArea > QWidget > QWidget { background: transparent; }
 #PageRoot, #BodyRoot, #Toolbar { background: transparent; }
 
-/* ---- الشريط العلوي (لون صلب رسمي) ---- */
+/* ---- الشريط العلوي (أبيض نظيف) ---- */
 #AppBar { background: $appbar_bg; border-bottom: 1px solid $border; }
-#AppTitle { color: $appbar_text; font-size: 17px; font-weight: 700; }
+#AppTitle { color: $appbar_text; font-size: 17px; font-weight: 800; }
 #UserChip {
-  background: transparent; color: $appbar_text;
-  border: 1px solid $appbar_text; border-radius: 3px;
-  padding: 5px 12px; font-weight: 600;
+  background: $surface_alt; color: $appbar_text; border: 1px solid $border;
+  border-radius: 18px; padding: 6px 14px; font-weight: 600;
 }
 
-/* ---- القائمة الجانبية (لوحة تنقّل تقليدية) ---- */
-#Sidebar { background: $sidebar_bg; border-left: 1px solid $border; }
+/* ---- الشريط الجانبي (داكن) ---- */
+#Sidebar { background: $sidebar_bg; border: none; }
 #SidebarScroll, #SidebarScroll > QWidget > QWidget { background: transparent; }
 #SidebarBrand {
-  color: $sidebar_active_text; font-size: 14px; font-weight: 700;
-  padding: 14px 12px 10px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.12);
+  color: #FFFFFF; font-size: 15px; font-weight: 800; padding: 18px 16px 14px 16px;
 }
 #NavButton {
-  text-align: right; padding: $nav_pad; border: none; border-radius: $radius;
-  color: $sidebar_text; background: transparent; margin: 1px 6px; font-weight: 600;
+  text-align: right; padding: $nav_pad; border: none; border-radius: 10px;
+  color: $sidebar_text; background: transparent; margin: 3px 12px; font-weight: 600;
 }
-#NavButton:hover { background: rgba(255,255,255,0.10); color: $sidebar_active_text; }
+#NavButton:hover { background: rgba(255,255,255,0.06); color: #FFFFFF; }
 #NavButton:checked {
   background: $sidebar_active_bg; color: $sidebar_active_text; font-weight: 700;
 }
+#SidebarLogout {
+  background: transparent; color: $sidebar_text;
+  border: 1px solid rgba(255,255,255,0.22); border-radius: 10px;
+  padding: 11px; font-weight: 700; margin: 8px 14px 14px 14px;
+}
+#SidebarLogout:hover { background: rgba(255,255,255,0.06); color: #FFFFFF; }
 
-/* ---- الأزرار (مسطّحة بإطار واضح) ---- */
+/* ---- الأزرار ---- */
 QPushButton {
-  background: $primary; color: $on_primary; border: 1px solid $primary_dark;
-  border-radius: $radius; padding: $btn_pad; font-weight: 600;
+  background: $primary; color: $on_primary; border: none; border-radius: 10px;
+  padding: $btn_pad; font-weight: 700;
 }
 QPushButton:hover { background: $primary_hover; }
 QPushButton:pressed { background: $primary_dark; }
-QPushButton:disabled { background: $surface_alt; color: $text_muted; border: 1px solid $border; }
-QPushButton#Ghost {
-  background: $surface; color: $text; border: 1px solid $border;
-}
+QPushButton:disabled { background: $surface_alt; color: $text_muted; }
+QPushButton#Ghost { background: $surface; color: $text; border: 1px solid $border; }
 QPushButton#Ghost:hover { background: $surface_alt; }
-QPushButton#Accent { background: $accent; color: $on_accent; border: 1px solid $accent_dark; }
-QPushButton#Accent:hover { background: $accent_dark; }
-QPushButton#Danger { background: $danger; color: #FFFFFF; border: 1px solid $danger; }
-QPushButton#Danger:hover { background: $danger; }
-QPushButton#Success { background: $success; color: #FFFFFF; border: 1px solid $success; }
+QPushButton#Accent { background: $accent; color: $on_accent; }
+QPushButton#Danger { background: $danger; color: #FFFFFF; }
+QPushButton#Success { background: $success; color: #FFFFFF; }
+#AppBar QPushButton#Ghost { background: $surface; color: $text; border: 1px solid $border; }
 
-#AppBar QPushButton#Ghost {
-  background: transparent; color: $appbar_text; border: 1px solid $appbar_text;
-}
-#AppBar QPushButton#Ghost:hover { background: rgba(255,255,255,0.12); }
-
-/* ---- الحقول (مربّعة واضحة) ---- */
+/* ---- الحقول (دائرية ناعمة) ---- */
 QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QPlainTextEdit, QTextEdit {
-  background: $input_bg; border: 1px solid $border; border-radius: $radius; padding: $pad_v;
+  background: $input_bg; border: 1px solid $border; border-radius: 10px; padding: $pad_v;
   color: $text; selection-background-color: $primary; selection-color: $on_primary;
 }
 QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus, QDateEdit:focus,
 QPlainTextEdit:focus, QTextEdit:focus { border: 1px solid $primary; }
-QComboBox::drop-down { border: none; width: 22px; }
+QComboBox::drop-down { border: none; width: 24px; }
 QComboBox QAbstractItemView {
-  background: $surface; border: 1px solid $border; outline: none;
-  selection-background-color: $primary; selection-color: $on_primary;
+  background: $surface; border: 1px solid $border; border-radius: 8px; outline: none;
+  selection-background-color: $primary; selection-color: $on_primary; padding: 4px;
 }
 QSpinBox::up-button, QSpinBox::down-button,
-QDoubleSpinBox::up-button, QDoubleSpinBox::down-button { width: 18px; }
+QDoubleSpinBox::up-button, QDoubleSpinBox::down-button { width: 20px; }
 
-/* ---- اللوحات/البطاقات (إطار صلب بلا ظل) ---- */
-#Card {
-  background: $surface; border: 1px solid $border; border-radius: $radius;
-}
-#StatCard {
-  background: $surface; border: 1px solid $border; border-radius: $radius;
-  border-top: 3px solid $stat_accent;
-}
-#StatValue { font-size: $stat_value_size; font-weight: 800; color: $stat_accent; }
-#StatLabel { color: $text_muted; font-weight: 700; }
+/* ---- الكروت (بيضاء دائرية) ---- */
+#Card { background: $surface; border: 1px solid $border; border-radius: 14px; }
+#StatCard { background: $surface; border: 1px solid $border; border-radius: 14px; }
+#StatValue { font-size: $stat_value_size; font-weight: 800; color: $text; }
+#StatLabel { color: $text_muted; font-weight: 600; }
+#StatHint { color: $text_muted; font-size: 12px; font-weight: 600; }
+#StatChip { border-radius: 12px; font-size: 20px; }
 #Title { font-size: $title_size; font-weight: 800; color: $text; }
-#Heading { font-size: $heading_size; font-weight: 700; color: $text; }
+#Heading { font-size: $heading_size; font-weight: 800; color: $text; }
 #Muted { color: $text_muted; }
 
-/* ---- الجداول (كلاسيكية: رأس صلب + خطوط شبكة + تظليل صفوف) ---- */
+/* ---- الجداول (نظيفة بفواصل خفيفة) ---- */
 QTableWidget, QTableView {
-  background: $surface; border: 1px solid $border; border-radius: 0;
-  gridline-color: $border; alternate-background-color: $surface_alt;
+  background: $surface; border: 1px solid $border; border-radius: 12px;
+  gridline-color: transparent; alternate-background-color: $surface;
 }
 QHeaderView::section {
-  background: $surface_alt; color: $text; padding: 8px; border: 0;
-  border-bottom: 1px solid $border; border-left: 1px solid $border; font-weight: 700;
+  background: $surface; color: $text_muted; padding: 12px 10px; border: none;
+  border-bottom: 1px solid $border; font-weight: 700;
 }
-QHeaderView::section:hover { background: $primary; color: $on_primary; }
-QTableWidget::item, QTableView::item { padding: 5px; border: 0; }
-QTableWidget::item:selected, QTableView::item:selected { background: $primary; color: $on_primary; }
-QTableCornerButton::section { background: $surface_alt; border: 1px solid $border; }
+QHeaderView::section:hover { color: $text; }
+QTableWidget::item, QTableView::item { padding: 9px 6px; border-bottom: 1px solid $border; }
+QTableWidget::item:selected, QTableView::item:selected { background: $surface_alt; color: $text; }
+QTableCornerButton::section { background: $surface; border: none; }
 
-/* ---- التبويبات (كلاسيكية) ---- */
-QTabWidget::pane { border: 1px solid $border; top: -1px; background: $surface; }
+/* ---- شارات الحالة ---- */
+#PillSuccess { background: rgba(46,158,91,0.15);  color: $success; border-radius: 10px; padding: 4px 12px; font-weight: 700; }
+#PillWarning { background: rgba(217,164,65,0.20);  color: #A87714; border-radius: 10px; padding: 4px 12px; font-weight: 700; }
+#PillDanger  { background: rgba(224,88,79,0.15);   color: $danger;  border-radius: 10px; padding: 4px 12px; font-weight: 700; }
+#PillMuted   { background: $surface_alt;            color: $text_muted; border-radius: 10px; padding: 4px 12px; font-weight: 700; }
+
+/* ---- التبويبات ---- */
+QTabWidget::pane { border: 1px solid $border; border-radius: 12px; top: -1px; background: $surface; }
 QTabBar::tab {
-  background: $surface_alt; color: $text_muted; padding: 8px 18px;
-  border: 1px solid $border; border-bottom: none; margin-left: 2px; font-weight: 700;
+  background: transparent; color: $text_muted; padding: 10px 20px; border: none;
+  border-bottom: 2px solid transparent; margin-left: 4px; font-weight: 700;
 }
-QTabBar::tab:selected { background: $surface; color: $primary; }
+QTabBar::tab:selected { color: $primary; border-bottom: 2px solid $primary; }
 
-/* ---- أشرطة التمرير (كلاسيكية) ---- */
-QScrollBar:vertical { background: $surface_alt; width: 14px; margin: 0; border-left: 1px solid $border; }
-QScrollBar::handle:vertical { background: $border; border-radius: 0; min-height: 30px; }
+/* ---- أشرطة التمرير (رفيعة) ---- */
+QScrollBar:vertical { background: transparent; width: 10px; margin: 2px; }
+QScrollBar::handle:vertical { background: $border; border-radius: 5px; min-height: 30px; }
 QScrollBar::handle:vertical:hover { background: $text_muted; }
-QScrollBar:horizontal { background: $surface_alt; height: 14px; margin: 0; border-top: 1px solid $border; }
-QScrollBar::handle:horizontal { background: $border; border-radius: 0; min-width: 30px; }
+QScrollBar:horizontal { background: transparent; height: 10px; margin: 2px; }
+QScrollBar::handle:horizontal { background: $border; border-radius: 5px; min-width: 30px; }
 QScrollBar::handle:horizontal:hover { background: $text_muted; }
 QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
 QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
 
 /* ---- متفرقات ---- */
-QToolTip { background: $surface; color: $text; border: 1px solid $border; padding: 5px; }
-QCheckBox::indicator, QRadioButton::indicator { width: 16px; height: 16px; }
-QCheckBox::indicator:checked { background: $primary; border: 1px solid $primary_dark; }
-QProgressBar { border: 1px solid $border; border-radius: 0; background: $surface_alt; text-align: center; }
-QProgressBar::chunk { background: $primary; }
+QToolTip { background: $surface; color: $text; border: 1px solid $border; padding: 6px; border-radius: 8px; }
+QCheckBox::indicator, QRadioButton::indicator { width: 18px; height: 18px; }
+QCheckBox::indicator:checked { background: $primary; border-radius: 4px; }
+QProgressBar { border: none; border-radius: 8px; background: $surface_alt; text-align: center; }
+QProgressBar::chunk { background: $primary; border-radius: 8px; }
 QMessageBox, QDialog { background: $surface; }
-QMenu { background: $surface; color: $text; border: 1px solid $border; }
-QMenu::item { padding: 6px 20px; }
+QMenu { background: $surface; color: $text; border: 1px solid $border; border-radius: 8px; padding: 4px; }
+QMenu::item { padding: 7px 22px; border-radius: 6px; }
 QMenu::item:selected { background: $primary; color: $on_primary; }
