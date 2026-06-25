@@ -411,10 +411,21 @@ class SaleDetailPage(Page):
             item = self._stats.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-        self._stats.addWidget(StatCard("الإجمالي", format_currency(sale.total, symbol)))
-        self._stats.addWidget(StatCard("المقبوض", format_currency(sale.paid, symbol)))
-        self._stats.addWidget(StatCard("المتبقّي", format_currency(sale.remaining, symbol)))
-        self._stats.addWidget(StatCard("الحالة", sale.payment_status))
+        self._stats.addWidget(
+            StatCard("الإجمالي", format_currency(sale.total, symbol),
+                     icon="🧾", tone="#4E63C7")
+        )
+        self._stats.addWidget(
+            StatCard("المقبوض", format_currency(sale.paid, symbol),
+                     icon="💵", tone="#2E9E5B")
+        )
+        self._stats.addWidget(
+            StatCard("المتبقّي", format_currency(sale.remaining, symbol),
+                     icon="⏳", tone="#E0584F")
+        )
+        self._stats.addWidget(
+            StatCard("الحالة", sale.payment_status, icon="🏷️", tone="#D9A441")
+        )
 
         lay = self._info.layout()
         while lay.count():

@@ -261,7 +261,8 @@ class SupplierAccountPage(Page):
             if item.widget():
                 item.widget().deleteLater()
         self._stats_row.addWidget(
-            StatCard("الرصيد الحالي (له)", format_currency(sup.balance, symbol))
+            StatCard("الرصيد الحالي (له)", format_currency(sup.balance, symbol),
+                     icon="💼", tone="#E08A3C")
         )
 
         lay = self._info.layout()

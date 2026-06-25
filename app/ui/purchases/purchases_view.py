@@ -402,10 +402,17 @@ class PurchaseDetailPage(Page):
             item = self._stats.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-        self._stats.addWidget(StatCard("الإجمالي", format_currency(purchase.total, symbol)))
-        self._stats.addWidget(StatCard("المدفوع", format_currency(purchase.paid, symbol)))
         self._stats.addWidget(
-            StatCard("المتبقّي", format_currency(purchase.remaining, symbol))
+            StatCard("الإجمالي", format_currency(purchase.total, symbol),
+                     icon="🧾", tone="#4E63C7")
+        )
+        self._stats.addWidget(
+            StatCard("المدفوع", format_currency(purchase.paid, symbol),
+                     icon="✅", tone="#2E9E5B")
+        )
+        self._stats.addWidget(
+            StatCard("المتبقّي", format_currency(purchase.remaining, symbol),
+                     icon="⏳", tone="#E0584F")
         )
 
         lay = self._info.layout()

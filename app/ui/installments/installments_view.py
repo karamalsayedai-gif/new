@@ -359,11 +359,16 @@ class InstallmentDetailPage(Page):
             item = self._stats.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-        for label, val in (
-            ("المقدّم", plan.down_payment), ("إجمالي الأقساط", plan.total_amount),
-            ("المدفوع", paid), ("المتبقّي", remaining), ("المتأخر", overdue),
+        for label, val, icon, tone in (
+            ("المقدّم", plan.down_payment, "💵", "#2BB3A3"),
+            ("إجمالي الأقساط", plan.total_amount, "🧾", "#4E63C7"),
+            ("المدفوع", paid, "✅", "#2E9E5B"),
+            ("المتبقّي", remaining, "⏳", "#E08A3C"),
+            ("المتأخر", overdue, "⏰", "#E0584F"),
         ):
-            self._stats.addWidget(StatCard(label, format_currency(val, symbol)))
+            self._stats.addWidget(
+                StatCard(label, format_currency(val, symbol), icon=icon, tone=tone)
+            )
 
         lay = self._info.layout()
         while lay.count():

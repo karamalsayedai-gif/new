@@ -288,13 +288,18 @@ class CustomerAccountPage(Page):
             item = self._stats_row.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-        self._stats_row.addWidget(StatCard("الرصيد الحالي", format_currency(cust.balance, symbol)))
         self._stats_row.addWidget(
-            StatCard("الحد الائتماني", format_currency(cust.credit_limit, symbol))
+            StatCard("الرصيد الحالي", format_currency(cust.balance, symbol),
+                     icon="💼", tone="#4E63C7")
+        )
+        self._stats_row.addWidget(
+            StatCard("الحد الائتماني", format_currency(cust.credit_limit, symbol),
+                     icon="🏷️", tone="#D9A441")
         )
         available = cust.credit_limit - cust.balance
         self._stats_row.addWidget(
-            StatCard("المتاح من الائتمان", format_currency(available, symbol))
+            StatCard("المتاح من الائتمان", format_currency(available, symbol),
+                     icon="✅", tone="#2E9E5B")
         )
 
         # بطاقة البيانات
