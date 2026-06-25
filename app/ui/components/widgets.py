@@ -100,14 +100,15 @@ class StatCard(QFrame):
     ):
         super().__init__(parent)
         self.setObjectName("StatCard")
+        self.setMinimumHeight(104)
         add_shadow(self)
 
         row = QHBoxLayout(self)
-        row.setContentsMargins(18, 16, 18, 16)
-        row.setSpacing(12)
+        row.setContentsMargins(20, 18, 20, 18)
+        row.setSpacing(14)
 
         texts = QVBoxLayout()
-        texts.setSpacing(4)
+        texts.setSpacing(6)
         self._label = QLabel(label)
         self._label.setObjectName("StatLabel")
         self._value = QLabel(value)
@@ -126,10 +127,10 @@ class StatCard(QFrame):
             tone = tone or "#8A90A0"
             chip = QLabel(icon)
             chip.setObjectName("StatChip")
-            chip.setFixedSize(46, 46)
+            chip.setFixedSize(52, 52)
             chip.setAlignment(Qt.AlignmentFlag.AlignCenter)
             chip.setStyleSheet(
-                f"background:{_soft(tone)}; color:{tone}; border-radius:12px;"
+                f"background:{_soft(tone)}; color:{tone}; border-radius:14px;"
             )
             row.addWidget(chip, alignment=Qt.AlignmentFlag.AlignTop)
 

@@ -48,8 +48,8 @@ class DashboardView(QWidget):
         outer.setContentsMargins(0, 0, 0, 0)
         content = QWidget()
         layout = QVBoxLayout(content)
-        layout.setContentsMargins(24, 18, 24, 20)
-        layout.setSpacing(16)
+        layout.setContentsMargins(30, 24, 30, 26)
+        layout.setSpacing(20)
         outer.addWidget(scroll_area(content), stretch=1)
 
         user = self._c.auth.current_user
@@ -59,7 +59,7 @@ class DashboardView(QWidget):
         layout.addWidget(muted_label(self._c.settings.showroom_name))
 
         grid = QGridLayout()
-        grid.setSpacing(14)
+        grid.setSpacing(18)
         specs = [
             ("balance", "رصيد الصندوق", "💰", "#C7A24E"),
             ("sales_today", "مبيعات اليوم", "🧾", "#2E9E5B"),

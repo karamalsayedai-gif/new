@@ -85,27 +85,27 @@ QSpinBox::up-button, QSpinBox::down-button,
 QDoubleSpinBox::up-button, QDoubleSpinBox::down-button { width: 20px; }
 
 /* ---- الكروت (بيضاء دائرية) ---- */
-#Card { background: $surface; border: 1px solid $border; border-radius: 14px; }
-#StatCard { background: $surface; border: 1px solid $border; border-radius: 14px; }
+#Card { background: $surface; border: 1px solid $border; border-radius: 16px; }
+#StatCard { background: $surface; border: 1px solid $border; border-radius: 16px; }
 #StatValue { font-size: $stat_value_size; font-weight: 800; color: $text; }
 #StatLabel { color: $text_muted; font-weight: 600; }
 #StatHint { color: $text_muted; font-size: 12px; font-weight: 600; }
-#StatChip { border-radius: 12px; font-size: 20px; }
+#StatChip { border-radius: 14px; font-size: 22px; }
 #Title { font-size: $title_size; font-weight: 800; color: $text; }
 #Heading { font-size: $heading_size; font-weight: 800; color: $text; }
 #Muted { color: $text_muted; }
 
-/* ---- الجداول (نظيفة بفواصل خفيفة) ---- */
+/* ---- الجداول (نظيفة بفواصل خفيفة + صفوف مريحة) ---- */
 QTableWidget, QTableView {
-  background: $surface; border: 1px solid $border; border-radius: 12px;
+  background: $surface; border: 1px solid $border; border-radius: 14px;
   gridline-color: transparent; alternate-background-color: $surface;
 }
 QHeaderView::section {
-  background: $surface; color: $text_muted; padding: 12px 10px; border: none;
+  background: $surface; color: $text_muted; padding: 14px 12px; border: none;
   border-bottom: 1px solid $border; font-weight: 700;
 }
 QHeaderView::section:hover { color: $text; }
-QTableWidget::item, QTableView::item { padding: 9px 6px; border-bottom: 1px solid $border; }
+QTableWidget::item, QTableView::item { padding: 13px 8px; border-bottom: 1px solid $border; }
 QTableWidget::item:selected, QTableView::item:selected { background: $surface_alt; color: $text; }
 QTableCornerButton::section { background: $surface; border: none; }
 

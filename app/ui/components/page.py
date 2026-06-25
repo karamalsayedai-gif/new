@@ -33,8 +33,8 @@ class Page(QWidget):
         super().__init__()
         self._navigator = navigator
         root = QVBoxLayout(self)
-        root.setContentsMargins(24, 18, 24, 20)
-        root.setSpacing(12)
+        root.setContentsMargins(30, 24, 30, 26)
+        root.setSpacing(16)
 
         header = QHBoxLayout()
         header.setSpacing(10)

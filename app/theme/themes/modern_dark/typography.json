@@ -1,7 +1,7 @@
 {
   "font": "Tajawal, Cairo, Segoe UI, Tahoma, Arial",
   "base_size": "14px",
-  "heading_size": "16px",
-  "title_size": "21px",
-  "stat_value_size": "26px"
+  "heading_size": "18px",
+  "title_size": "25px",
+  "stat_value_size": "30px"
 }
