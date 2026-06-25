@@ -17,6 +17,21 @@ QScrollArea > QWidget > QWidget { background: transparent; }
   background: $surface_alt; color: $appbar_text; border: 1px solid $border;
   border-radius: 18px; padding: 6px 14px; font-weight: 600;
 }
+#TopSearch {
+  background: $surface_alt; color: $appbar_text; border: 1px solid $border;
+  border-radius: 19px; padding: 8px 16px;
+}
+#TopSearch:focus { border: 1px solid $primary; background: $surface; }
+#IconButton {
+  background: $surface_alt; color: $appbar_text; border: 1px solid $border;
+  border-radius: 19px; font-size: 16px; padding: 0;
+}
+#IconButton:hover { background: $border; }
+#Avatar {
+  background: $primary; color: $on_primary; border-radius: 19px;
+  font-size: 16px; font-weight: 800;
+}
+#UserName { color: $appbar_text; font-weight: 700; font-size: 12px; }
 
 /* ---- الشريط الجانبي (داكن) ---- */
 #Sidebar { background: $sidebar_bg; border: none; }

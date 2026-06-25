@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QMainWindow,
     QPushButton,
     QScrollArea,
@@ -115,19 +116,46 @@ class MainWindow(QMainWindow):
         bar = QFrame()
         bar.setObjectName("AppBar")
         layout = QHBoxLayout(bar)
-        layout.setContentsMargins(18, 10, 18, 10)
+        layout.setContentsMargins(20, 9, 20, 9)
+        layout.setSpacing(12)
 
         title = QLabel(self._c.settings.showroom_name)
         title.setObjectName("AppTitle")
         layout.addWidget(title)
         layout.addStretch(1)
 
+        # خانة بحث عامة تُمرَّر للشاشة الحالية.
+        self._top_search = QLineEdit()
+        self._top_search.setObjectName("TopSearch")
+        self._top_search.setPlaceholderText("🔍   ابحث…")
+        self._top_search.setFixedWidth(280)
+        self._top_search.textChanged.connect(self._on_top_search)
+        layout.addWidget(self._top_search)
+
+        bell = QPushButton("🔔")
+        bell.setObjectName("IconButton")
+        bell.setFixedSize(38, 38)
+        bell.setCursor(Qt.CursorShape.PointingHandCursor)
+        layout.addWidget(bell)
+
         user = self._c.auth.current_user
         if user is not None:
-            chip = QLabel(f"👤  {user.full_name} — {user.role_name}")
-            chip.setObjectName("UserChip")
-            layout.addWidget(chip)
+            initial = (user.full_name or "?").strip()[:1] or "؟"
+            avatar = QLabel(initial)
+            avatar.setObjectName("Avatar")
+            avatar.setFixedSize(38, 38)
+            avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(avatar)
+            who = QLabel(f"{user.full_name}\n{user.role_name}")
+            who.setObjectName("UserName")
+            layout.addWidget(who)
         return bar
+
+    def _on_top_search(self, text: str) -> None:
+        page = self._navigator.current()
+        search = getattr(page, "_search", None)
+        if search is not None and search is not self._top_search:
+            search.setText(text)
 
     def _build_body(self) -> QWidget:
         body = QWidget()
@@ -164,7 +192,7 @@ class MainWindow(QMainWindow):
         outer.setContentsMargins(6, 6, 6, 6)
         outer.setSpacing(2)
 
-        brand = QLabel(AppConfig.APP_NAME_AR)
+        brand = QLabel(f"🏍️   {AppConfig.APP_NAME_AR}")
         brand.setObjectName("SidebarBrand")
         brand.setWordWrap(True)
         outer.addWidget(brand)
@@ -213,6 +241,11 @@ class MainWindow(QMainWindow):
         button = self._nav_buttons.get(key)
         if button is not None:
             button.setChecked(True)
+        # تفريغ خانة البحث العامة عند تبديل الوحدة (دون تصفية الشاشة الجديدة).
+        if hasattr(self, "_top_search"):
+            self._top_search.blockSignals(True)
+            self._top_search.clear()
+            self._top_search.blockSignals(False)
         # جذر جديد للوحدة (يُعاد بناؤه ببيانات حديثة) ويمسح أي صفحات تفاصيل.
         self._navigator.reset_to(item.factory(self._c))
 
