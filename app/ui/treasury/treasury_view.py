@@ -29,19 +29,27 @@ from app.domain.enums import DayStatus, TreasuryCategory, TreasuryDirection
 from app.services.treasury_service import TreasuryError
 from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
-from app.ui.components.widgets import Card, StatCard, title_label
+from app.ui.components.widgets import (
+    Card,
+    StatCard,
+    heading_label,
+    muted_label,
+    title_label,
+    treasury_combo,
+)
 
 if TYPE_CHECKING:
     from app.core.container import Container
 
-_DIRECTION_AR = {"in": "قبض", "out": "صرف"}
+_DIRECTION_AR = {"in": "إيداع", "out": "سحب"}
 _CATEGORY_AR = {
     "income": "إيراد",
     "expense": "مصروف",
     "manual": "تسوية",
-    "sale": "بيع",
+    "sale": "بيع نقدي",
     "installment": "قسط",
     "purchase": "شراء",
+    "return": "مرتجع",
 }
 
 
@@ -65,20 +73,31 @@ class TreasuryView(QWidget):
         layout.setSpacing(16)
 
         title_row = QHBoxLayout()
-        title_row.addWidget(title_label("الخزينة الرئيسية"))
+        title_row.addWidget(title_label("الخزينة"))
         title_row.addStretch(1)
         layout.addLayout(title_row)
 
         can_manage = self._c.auth.can(Permissions.TREASURY_MANAGE)
-        self._in_btn = QPushButton("قبض (إيداع)")
+        # اختيار الخزنة المعروضة.
+        self._account = QComboBox()
+        self._account.setMinimumWidth(200)
+        self._reload_accounts()
+        self._account.currentIndexChanged.connect(self.refresh)
+        self._in_btn = QPushButton("إيداع")
         self._in_btn.setObjectName("Success")
         self._in_btn.clicked.connect(lambda: self._add(TreasuryDirection.IN.value))
-        self._out_btn = QPushButton("صرف")
+        self._out_btn = QPushButton("سحب")
         self._out_btn.setObjectName("Danger")
         self._out_btn.clicked.connect(lambda: self._add(TreasuryDirection.OUT.value))
+        manage_btn = QPushButton("إدارة الخزائن")
+        manage_btn.setObjectName("Ghost")
+        manage_btn.clicked.connect(self._manage_accounts)
         for btn in (self._in_btn, self._out_btn):
             btn.setEnabled(can_manage)
-        layout.addWidget(toolbar([self._in_btn, self._out_btn]))
+        layout.addWidget(
+            toolbar([QLabel("الخزنة:"), self._account, self._in_btn,
+                     self._out_btn, manage_btn])
+        )
 
         grid = QGridLayout()
         grid.setSpacing(16)
@@ -114,14 +133,33 @@ class TreasuryView(QWidget):
         footer.addWidget(self._delete_btn)
         layout.addLayout(footer)
 
+    # ── الخزائن ─────────────────────────────────────────────────────────
+    def _reload_accounts(self) -> None:
+        prev = self._current_account_id()
+        self._account.blockSignals(True)
+        self._account.clear()
+        for acc in self._c.treasury.active_accounts():
+            self._account.addItem(acc["name"], acc["id"])
+            if acc["id"] == prev:
+                self._account.setCurrentIndex(self._account.count() - 1)
+        self._account.blockSignals(False)
+
+    def _current_account_id(self) -> int | None:
+        return self._account.currentData() if self._account.count() else None
+
+    def _manage_accounts(self) -> None:
+        self._c.navigator.push(TreasuriesManagePage(self._c))
+
     # ── البيانات ────────────────────────────────────────────────────────
     def refresh(self) -> None:
+        self._reload_accounts()  # التقاط أي خزائن جديدة أُضيفت.
         symbol = self._c.settings.currency_symbol
         day = self._c.day_closing.get_or_open_today()
-        summary = self._c.treasury.day_summary(day.id)
+        acc_id = self._current_account_id()
+        summary = self._c.treasury.day_summary(day.id, acc_id)
 
         self._balance_card.set_value(
-            format_currency(self._c.treasury.current_balance(), symbol)
+            format_currency(self._c.treasury.current_balance(acc_id), symbol)
         )
         self._in_card.set_value(format_currency(summary["in"], symbol))
         self._out_card.set_value(format_currency(summary["out"], symbol))
@@ -134,7 +172,7 @@ class TreasuryView(QWidget):
         self._out_btn.setEnabled(can_manage and day_open)
         self._delete_btn.setEnabled(can_manage and day_open)
 
-        rows = self._c.treasury.list_for_day(day.id)
+        rows = self._c.treasury.list_for_day(day.id, acc_id)
         self._table.setRowCount(len(rows))
         for r, row in enumerate(rows):
             entry_id = row["id"]
@@ -162,7 +200,9 @@ class TreasuryView(QWidget):
 
     # ── إجراءات ─────────────────────────────────────────────────────────
     def _add(self, direction: str) -> None:
-        self._c.navigator.push(TreasuryEntryPage(self._c, direction))
+        self._c.navigator.push(
+            TreasuryEntryPage(self._c, direction, self._current_account_id())
+        )
 
     def _delete_selected(self) -> None:
         row = self._table.currentRow()
@@ -188,7 +228,9 @@ class TreasuryView(QWidget):
 
 
 class TreasuryEntryPage(Page):
-    def __init__(self, container: "Container", direction: str):
+    def __init__(
+        self, container: "Container", direction: str, account_id: int | None = None
+    ):
         super().__init__(
             container.navigator, _DIRECTION_AR.get(direction, "حركة") + " من الخزينة"
         )
@@ -202,6 +244,8 @@ class TreasuryEntryPage(Page):
         self._amount.setRange(0.01, 1_000_000_000)
         self._amount.setDecimals(2)
 
+        self._account = treasury_combo(container, current_id=account_id)
+
         self._category = QComboBox()
         if direction == TreasuryDirection.IN.value:
             self._category.addItem("إيراد", TreasuryCategory.INCOME.value)
@@ -210,6 +254,7 @@ class TreasuryEntryPage(Page):
         self._category.addItem("تسوية", TreasuryCategory.MANUAL.value)
 
         self._notes = QLineEdit()
+        form.addRow(QLabel("الخزنة"), self._account)
         form.addRow(QLabel("المبلغ"), self._amount)
         form.addRow(QLabel("التصنيف"), self._category)
         form.addRow(QLabel("ملاحظات"), self._notes)
@@ -237,8 +282,101 @@ class TreasuryEntryPage(Page):
                 amount=self._amount.value(),
                 user_id=user.id if user else None,
                 notes=self._notes.text().strip() or None,
+                treasury_id=self._account.currentData(),
             )
         except TreasuryError as exc:
             QMessageBox.warning(self, "تعذّر الحفظ", str(exc))
             return
         self.go_back()
+
+
+_KIND_AR = {"cash": "نقدي", "wallet": "محفظة إلكترونية", "bank": "بنك"}
+
+
+# ── إدارة الخزائن (إضافة/تعديل/تفعيل) ───────────────────────────────────
+class TreasuriesManagePage(Page):
+    def __init__(self, container: "Container"):
+        super().__init__(container.navigator, "إدارة الخزائن")
+        self._c = container
+        self._can = container.auth.can(Permissions.TREASURY_MANAGE)
+
+        self.body.addWidget(
+            muted_label("أضف خزائن متعددة (محفظة فودافون كاش، بنك…) واستخدمها في الفواتير.")
+        )
+
+        add_card = Card()
+        add_card.layout().addWidget(heading_label("إضافة خزنة جديدة"))
+        row = QHBoxLayout()
+        self._name = QLineEdit()
+        self._name.setPlaceholderText("اسم الخزنة (مثال: فودافون كاش)")
+        self._kind = QComboBox()
+        for key, lbl in _KIND_AR.items():
+            self._kind.addItem(lbl, key)
+        add_btn = QPushButton("إضافة")
+        add_btn.setEnabled(self._can)
+        add_btn.clicked.connect(self._add)
+        row.addWidget(QLabel("الاسم"))
+        row.addWidget(self._name, stretch=1)
+        row.addWidget(QLabel("النوع"))
+        row.addWidget(self._kind)
+        row.addWidget(add_btn)
+        add_card.layout().addLayout(row)
+        self.body.addWidget(add_card)
+
+        self._table = QTableWidget(0, 5)
+        self._table.setHorizontalHeaderLabels(
+            ["الخزنة", "النوع", "الرصيد", "الحالة", "إجراءات"]
+        )
+        self._table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch
+        )
+        self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.body.addWidget(self._table, stretch=1)
+        self.refresh()
+
+    def refresh(self) -> None:
+        symbol = self._c.settings.currency_symbol
+        accounts = self._c.treasury.account_balances()
+        self._table.setRowCount(len(accounts))
+        for r, acc in enumerate(accounts):
+            name = acc["name"] + ("  (افتراضية)" if acc["is_default"] else "")
+            self._table.setItem(r, 0, QTableWidgetItem(name))
+            self._table.setItem(r, 1, QTableWidgetItem(_KIND_AR.get(acc["kind"], acc["kind"])))
+            self._table.setItem(r, 2, QTableWidgetItem(format_currency(acc["balance"], symbol)))
+            self._table.setItem(
+                r, 3, QTableWidgetItem("نشطة" if acc["is_active"] else "موقوفة")
+            )
+            holder = QWidget()
+            hl = QHBoxLayout(holder)
+            hl.setContentsMargins(0, 0, 0, 0)
+            if not acc["is_default"]:
+                toggle = QPushButton("إيقاف" if acc["is_active"] else "تفعيل")
+                toggle.setObjectName("Ghost")
+                toggle.setEnabled(self._can)
+                toggle.clicked.connect(
+                    lambda _c, a=acc: self._toggle(a["id"], not a["is_active"])
+                )
+                hl.addWidget(toggle)
+            hl.addStretch(1)
+            self._table.setCellWidget(r, 4, holder)
+
+    def _add(self) -> None:
+        user = self._c.auth.current_user
+        try:
+            self._c.treasury.create_account(
+                self._name.text(), self._kind.currentData(),
+                user.id if user else None,
+            )
+        except TreasuryError as exc:
+            QMessageBox.warning(self, "تعذّر الإضافة", str(exc))
+            return
+        self._name.clear()
+        self.refresh()
+
+    def _toggle(self, treasury_id: int, active: bool) -> None:
+        try:
+            self._c.treasury.set_account_active(treasury_id, active)
+        except TreasuryError as exc:
+            QMessageBox.warning(self, "تعذّر", str(exc))
+            return
+        self.refresh()

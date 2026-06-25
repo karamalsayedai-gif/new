@@ -30,6 +30,7 @@ class PurchasesRepository(BaseRepository):
         items: Sequence[dict],
         update_item_cost: bool = True,
         invoice_prefix: str = "ش-",
+        treasury_id: int | None = None,
     ) -> tuple[int, float, str]:
         """ترحيل فاتورة شراء كاملة في معاملة واحدة. يعيد (المعرّف، الإجمالي، الرقم)."""
         total = sum(float(it["quantity"]) * float(it["unit_cost"]) for it in items)
@@ -75,10 +76,12 @@ class PurchasesRepository(BaseRepository):
 
             if paid > 0:
                 conn.execute(
-                    "INSERT INTO treasury(direction, category, amount, ref_table, "
-                    "ref_id, date, day_id, user_id, notes) "
-                    "VALUES ('out', 'purchase', ?, 'purchases', ?, ?, ?, ?, ?)",
-                    (paid, purchase_id, stamp, day_id, user_id,
+                    "INSERT INTO treasury(direction, category, amount, treasury_id, "
+                    "ref_table, ref_id, date, day_id, user_id, notes) "
+                    "VALUES ('out', 'purchase', ?, "
+                    "COALESCE(?, (SELECT id FROM treasuries WHERE is_default=1 LIMIT 1)), "
+                    "'purchases', ?, ?, ?, ?, ?)",
+                    (paid, treasury_id, purchase_id, stamp, day_id, user_id,
                      "سداد فاتورة شراء"),
                 )
 

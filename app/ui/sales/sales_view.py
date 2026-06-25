@@ -41,6 +41,7 @@ from app.ui.components.widgets import (
     heading_label,
     status_pill,
     title_label,
+    treasury_combo,
 )
 
 if TYPE_CHECKING:
@@ -247,18 +248,20 @@ class SaleFormPage(Page):
         self._total_lbl = QLabel("0")
         self._total_lbl.setObjectName("Heading")
         self._payment = QComboBox()
-        self._payment.addItem("كاش (مدفوع كامل)", "cash")
-        self._payment.addItem("آجل (على الحساب)", "credit")
-        self._payment.addItem("جزئي", "partial")
+        self._payment.addItem("بيع نقدي (مدفوع كامل)", "cash")
+        self._payment.addItem("بيع آجل (على الحساب)", "credit")
+        self._payment.addItem("دفع جزئي", "partial")
         self._payment.currentIndexChanged.connect(self._on_payment_change)
         self._paid = QDoubleSpinBox()
         self._paid.setRange(0, 1_000_000_000)
         self._paid.setDecimals(2)
         self._paid.setEnabled(False)
+        self._treasury = treasury_combo(self._c)
         fform.addRow(QLabel("الخصم"), self._discount)
         fform.addRow(QLabel("الإجمالي بعد الخصم"), self._total_lbl)
         fform.addRow(QLabel("نوع الدفع"), self._payment)
         fform.addRow(QLabel("المقبوض (للجزئي)"), self._paid)
+        fform.addRow(QLabel("تروح لأي خزنة"), self._treasury)
         save = QPushButton("حفظ وترحيل")
         save.setEnabled(self._c.auth.can(Permissions.SALES_CASH_CREATE))
         save.clicked.connect(self._save)
@@ -360,6 +363,7 @@ class SaleFormPage(Page):
                 paid=paid,
                 notes=self._notes.text().strip() or None,
                 actor_id=actor_id,
+                treasury_id=self._treasury.currentData(),
             )
         except (SalesServiceError, CustomersServiceError) as exc:
             QMessageBox.warning(self, "تعذّر الترحيل", str(exc))

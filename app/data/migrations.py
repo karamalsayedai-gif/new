@@ -96,3 +96,27 @@ def run(db: "Database", old_version: int, new_version: int) -> None:
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_returns_ref ON returns(type, ref_id)"
             )
+
+        # v9 -> v10: خزائن متعددة (محافظ/بنوك) + ربط حركات الخزينة بالخزنة.
+        if old_version < 10:
+            from app.core.utils.formatters import now_iso
+
+            conn.execute(schema.TREASURIES_DDL)
+            stamp = now_iso()
+            cur = conn.execute(
+                "INSERT INTO treasuries(name, kind, is_default, is_active, created_at) "
+                "VALUES ('الخزنة الرئيسية', 'cash', 1, 1, ?)",
+                (stamp,),
+            )
+            default_id = int(cur.lastrowid)
+            conn.execute(
+                "INSERT INTO treasuries(name, kind, is_default, is_active, created_at) "
+                "VALUES ('خزنة مبيعات اليوم', 'cash', 0, 1, ?)",
+                (stamp,),
+            )
+            conn.execute("ALTER TABLE treasury ADD COLUMN treasury_id INTEGER")
+            # ربط كل الحركات القديمة بالخزنة الرئيسية.
+            conn.execute(
+                "UPDATE treasury SET treasury_id = ? WHERE treasury_id IS NULL",
+                (default_id,),
+            )

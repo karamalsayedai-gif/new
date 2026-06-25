@@ -52,6 +52,7 @@ class SalesService:
         paid: float = 0.0,
         notes: str | None = None,
         actor_id: int | None = None,
+        treasury_id: int | None = None,
     ) -> int:
         clean: list[dict] = []
         for ln in lines:
@@ -112,6 +113,7 @@ class SalesService:
             paid=paid,
             items=clean,
             invoice_prefix=self._settings.get(SettingKeys.SALES_NO_PREFIX, "ف-"),
+            treasury_id=treasury_id,
         )
         self._audit.log(
             "sale_create", user_id=actor_id, entity="sales", entity_id=sale_id,

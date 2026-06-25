@@ -42,6 +42,7 @@ from app.ui.components.widgets import (
     heading_label,
     muted_label,
     title_label,
+    treasury_combo,
 )
 
 if TYPE_CHECKING:
@@ -251,8 +252,10 @@ class PurchaseFormPage(Page):
         self._paid = QDoubleSpinBox()
         self._paid.setRange(0, 1_000_000_000)
         self._paid.setDecimals(2)
+        self._treasury = treasury_combo(self._c)
         fform.addRow(QLabel("إجمالي الفاتورة"), self._total_lbl)
         fform.addRow(QLabel("المدفوع الآن (نقدًا)"), self._paid)
+        fform.addRow(QLabel("تتسحب من أي خزنة"), self._treasury)
         save = QPushButton("حفظ وترحيل")
         save.setEnabled(self._c.auth.can(Permissions.PURCHASES_MANAGE))
         save.clicked.connect(self._save)
@@ -350,6 +353,7 @@ class PurchaseFormPage(Page):
                 paid=self._paid.value(),
                 notes=self._notes.text().strip() or None,
                 actor_id=actor_id,
+                treasury_id=self._treasury.currentData(),
             )
         except (PurchasesServiceError, SuppliersServiceError, InventoryServiceError) as exc:
             QMessageBox.warning(self, "تعذّر الترحيل", str(exc))

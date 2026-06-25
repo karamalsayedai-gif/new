@@ -28,6 +28,7 @@ class SalesRepository(BaseRepository):
         paid: float,
         items: Sequence[dict],
         invoice_prefix: str = "ف-",
+        treasury_id: int | None = None,
     ) -> tuple[int, float, str]:
         """ترحيل فاتورة بيع كاملة في معاملة واحدة. يعيد (المعرّف، الإجمالي، رقم الفاتورة)."""
         gross = sum(float(it["quantity"]) * float(it["unit_price"]) for it in items)
@@ -67,10 +68,13 @@ class SalesRepository(BaseRepository):
 
             if paid > 0:
                 conn.execute(
-                    "INSERT INTO treasury(direction, category, amount, ref_table, "
-                    "ref_id, date, day_id, user_id, notes) "
-                    "VALUES ('in', 'sale', ?, 'sales', ?, ?, ?, ?, ?)",
-                    (paid, sale_id, stamp, day_id, user_id, "تحصيل فاتورة بيع"),
+                    "INSERT INTO treasury(direction, category, amount, treasury_id, "
+                    "ref_table, ref_id, date, day_id, user_id, notes) "
+                    "VALUES ('in', 'sale', ?, "
+                    "COALESCE(?, (SELECT id FROM treasuries WHERE is_default=1 LIMIT 1)), "
+                    "'sales', ?, ?, ?, ?, ?)",
+                    (paid, treasury_id, sale_id, stamp, day_id, user_id,
+                     "تحصيل فاتورة بيع"),
                 )
 
             remaining = total - paid

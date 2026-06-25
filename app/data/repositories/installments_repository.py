@@ -29,6 +29,7 @@ class InstallmentsRepository(BaseRepository):
         items: Sequence[dict],
         installments: Sequence[dict],
         invoice_prefix: str = "ف-",
+        treasury_id: int | None = None,
     ) -> tuple[int, int]:
         """ترحيل بيع تقسيط كامل في معاملة واحدة. يعيد (sale_id, plan_id)."""
         stamp = now_iso()
@@ -66,10 +67,13 @@ class InstallmentsRepository(BaseRepository):
 
             if down_payment > 0:
                 conn.execute(
-                    "INSERT INTO treasury(direction, category, amount, ref_table, "
-                    "ref_id, date, day_id, user_id, notes) "
-                    "VALUES ('in', 'installment', ?, 'sales', ?, ?, ?, ?, ?)",
-                    (down_payment, sale_id, stamp, day_id, user_id, "مقدّم تقسيط"),
+                    "INSERT INTO treasury(direction, category, amount, treasury_id, "
+                    "ref_table, ref_id, date, day_id, user_id, notes) "
+                    "VALUES ('in', 'installment', ?, "
+                    "COALESCE(?, (SELECT id FROM treasuries WHERE is_default=1 LIMIT 1)), "
+                    "'sales', ?, ?, ?, ?, ?)",
+                    (down_payment, treasury_id, sale_id, stamp, day_id, user_id,
+                     "مقدّم تقسيط"),
                 )
 
             # العميل مدين بكامل جدول الأقساط (أصل متبقٍّ + فائدة).
@@ -97,7 +101,8 @@ class InstallmentsRepository(BaseRepository):
             return sale_id, plan_id
 
     def collect(
-        self, *, plan_id: int, amount: float, day_id: int | None, user_id: int | None
+        self, *, plan_id: int, amount: float, day_id: int | None,
+        user_id: int | None, treasury_id: int | None = None,
     ) -> float:
         """توزيع مبلغ التحصيل على الأقساط الأقدم أولًا. يعيد المبلغ المُحصَّل فعليًا."""
         plan = self.db.query_one(
@@ -136,10 +141,12 @@ class InstallmentsRepository(BaseRepository):
 
             if collected > 0:
                 conn.execute(
-                    "INSERT INTO treasury(direction, category, amount, ref_table, "
-                    "ref_id, date, day_id, user_id, notes) "
-                    "VALUES ('in', 'installment', ?, 'sales', ?, ?, ?, ?, ?)",
-                    (collected, plan["sale_id"], stamp, day_id, user_id,
+                    "INSERT INTO treasury(direction, category, amount, treasury_id, "
+                    "ref_table, ref_id, date, day_id, user_id, notes) "
+                    "VALUES ('in', 'installment', ?, "
+                    "COALESCE(?, (SELECT id FROM treasuries WHERE is_default=1 LIMIT 1)), "
+                    "'sales', ?, ?, ?, ?, ?)",
+                    (collected, treasury_id, plan["sale_id"], stamp, day_id, user_id,
                      "تحصيل قسط"),
                 )
                 if customer_id is not None:

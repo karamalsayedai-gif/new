@@ -67,6 +67,18 @@ RETURN_ITEMS_DDL = """
     );
 """
 
+# الخزائن المتعددة (الصندوق الرئيسي + محافظ مثل فودافون كاش + بنوك…).
+TREASURIES_DDL = """
+    CREATE TABLE treasuries (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        name       TEXT NOT NULL,
+        kind       TEXT NOT NULL DEFAULT 'cash',
+        is_default INTEGER NOT NULL DEFAULT 0,
+        is_active  INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+    );
+"""
+
 CREATE_STATEMENTS: list[str] = [
     # ── الأمن والصلاحيات ────────────────────────────────────────────────
     """
@@ -276,17 +288,29 @@ CREATE_STATEMENTS: list[str] = [
     """,
     # ── الخزينة والمصروفات/الإيرادات ────────────────────────────────────
     """
+    CREATE TABLE treasuries (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        name       TEXT NOT NULL,
+        kind       TEXT NOT NULL DEFAULT 'cash',
+        is_default INTEGER NOT NULL DEFAULT 0,
+        is_active  INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+    );
+    """,
+    """
     CREATE TABLE treasury (
-        id        INTEGER PRIMARY KEY AUTOINCREMENT,
-        direction TEXT NOT NULL,
-        category  TEXT NOT NULL,
-        amount    REAL NOT NULL DEFAULT 0,
-        ref_table TEXT,
-        ref_id    INTEGER,
-        date      TEXT NOT NULL,
-        day_id    INTEGER,
-        user_id   INTEGER,
-        notes     TEXT,
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        direction   TEXT NOT NULL,
+        category    TEXT NOT NULL,
+        amount      REAL NOT NULL DEFAULT 0,
+        treasury_id INTEGER,
+        ref_table   TEXT,
+        ref_id      INTEGER,
+        date        TEXT NOT NULL,
+        day_id      INTEGER,
+        user_id     INTEGER,
+        notes       TEXT,
+        FOREIGN KEY (treasury_id) REFERENCES treasuries(id),
         FOREIGN KEY (day_id) REFERENCES day_closings(id),
         FOREIGN KEY (user_id) REFERENCES users(id)
     );

@@ -17,6 +17,7 @@ from app.data.repositories.returns_repository import ReturnsRepository
 from app.data.repositories.sales_repository import SalesRepository
 from app.data.repositories.settings_repository import SettingsRepository
 from app.data.repositories.suppliers_repository import SuppliersRepository
+from app.data.repositories.treasuries_repository import TreasuriesRepository
 from app.data.repositories.treasury_repository import TreasuryRepository
 from app.data.repositories.users_repository import UsersRepository
 from app.services.audit_service import AuditService
@@ -46,6 +47,7 @@ class Container:
         self.users_repo = UsersRepository(self.db)
         self.day_closing_repo = DayClosingRepository(self.db)
         self.treasury_repo = TreasuryRepository(self.db)
+        self.treasuries_repo = TreasuriesRepository(self.db)
         self.customers_repo = CustomersRepository(self.db)
         self.suppliers_repo = SuppliersRepository(self.db)
         self.inventory_repo = InventoryRepository(self.db)
@@ -65,7 +67,7 @@ class Container:
         self.inventory = InventoryService(self.inventory_repo, self.audit)
         self.day_closing = DayClosingService(self.day_closing_repo, self.audit)
         self.treasury = TreasuryService(
-            self.treasury_repo, self.day_closing, self.audit
+            self.treasury_repo, self.day_closing, self.audit, self.treasuries_repo
         )
         self.purchases = PurchasesService(
             self.purchases_repo, self.day_closing, self.audit, self.settings

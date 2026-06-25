@@ -39,6 +39,7 @@ class ReturnsService:
     def create_sale_return(
         self, *, sale_id: int, lines: Sequence[dict], refund: float,
         notes: str | None = None, actor_id: int | None = None,
+        treasury_id: int | None = None,
     ) -> int:
         sale = self._sales.find_by_id(sale_id)
         if sale is None:
@@ -53,6 +54,7 @@ class ReturnsService:
         return_id, total = self._repo.create_sale_return(
             sale_id=sale_id, date=business_date_key(date.today()), day_id=day_id,
             user_id=actor_id, notes=notes, refund=refund, items=clean,
+            treasury_id=treasury_id,
         )
         self._audit.log(
             "sale_return", user_id=actor_id, entity="returns", entity_id=return_id,
@@ -64,6 +66,7 @@ class ReturnsService:
     def create_purchase_return(
         self, *, purchase_id: int, lines: Sequence[dict], refund: float,
         notes: str | None = None, actor_id: int | None = None,
+        treasury_id: int | None = None,
     ) -> int:
         purchase = self._purchases.find_by_id(purchase_id)
         if purchase is None:
@@ -78,6 +81,7 @@ class ReturnsService:
         return_id, total = self._repo.create_purchase_return(
             purchase_id=purchase_id, date=business_date_key(date.today()),
             day_id=day_id, user_id=actor_id, notes=notes, refund=refund, items=clean,
+            treasury_id=treasury_id,
         )
         self._audit.log(
             "purchase_return", user_id=actor_id, entity="returns",

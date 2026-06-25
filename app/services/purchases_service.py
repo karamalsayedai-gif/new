@@ -44,6 +44,7 @@ class PurchasesService:
         paid: float,
         notes: str | None = None,
         actor_id: int | None = None,
+        treasury_id: int | None = None,
     ) -> int:
         if not supplier_id:
             raise PurchasesServiceError("يجب اختيار المورّد.")
@@ -86,6 +87,7 @@ class PurchasesService:
             paid=paid,
             items=clean,
             invoice_prefix=self._settings.get(SettingKeys.PURCHASE_NO_PREFIX, "ش-"),
+            treasury_id=treasury_id,
         )
         self._audit.log(
             "purchase_create", user_id=actor_id, entity="purchases",

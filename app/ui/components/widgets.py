@@ -8,6 +8,7 @@ from __future__ import annotations
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (
+    QComboBox,
     QFrame,
     QGraphicsDropShadowEffect,
     QHBoxLayout,
@@ -16,6 +17,18 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+
+def treasury_combo(container, *, current_id: int | None = None) -> QComboBox:
+    """قائمة منسدلة بالخزائن النشطة، مع تحديد الخزنة الافتراضية (أو المحددة)."""
+    cb = QComboBox()
+    accounts = container.treasury.active_accounts()
+    target = current_id if current_id is not None else container.treasury.default_account_id()
+    for acc in accounts:
+        cb.addItem(acc["name"], acc["id"])
+        if acc["id"] == target:
+            cb.setCurrentIndex(cb.count() - 1)
+    return cb
 
 from app.theme.palette import darken, lighten
 

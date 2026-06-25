@@ -36,7 +36,13 @@ from app.services.installments_service import InstallmentsServiceError
 from app.ui.components.flow_layout import toolbar
 from app.ui.components.page import Page
 from app.ui.components.printing import build_invoice_html, export_pdf, print_html
-from app.ui.components.widgets import Card, StatCard, heading_label, title_label
+from app.ui.components.widgets import (
+    Card,
+    StatCard,
+    heading_label,
+    title_label,
+    treasury_combo,
+)
 
 if TYPE_CHECKING:
     from app.core.container import Container
@@ -211,7 +217,9 @@ class InstallmentFormPage(Page):
         self._first_due.setDate(QDate.currentDate().addMonths(1))
         self._summary = QLabel("")
         self._summary.setObjectName("Heading")
+        self._treasury = treasury_combo(self._c)
         tform.addRow(QLabel("المقدّم"), self._down)
+        tform.addRow(QLabel("مقدّم يروح لأي خزنة"), self._treasury)
         tform.addRow(QLabel("عدد الأقساط (أشهر)"), self._months)
         tform.addRow(QLabel("قيمة الفائدة"), self._interest)
         tform.addRow(QLabel("طريقة توزيع الفائدة"), self._dist)
@@ -300,6 +308,7 @@ class InstallmentFormPage(Page):
                 first_due_date=self._first_due.date().toString("yyyy-MM-dd"),
                 notes=self._notes.text().strip() or None,
                 actor_id=actor_id,
+                treasury_id=self._treasury.currentData(),
             )
         except (InstallmentsServiceError, CustomersServiceError) as exc:
             QMessageBox.warning(self, "تعذّر الإنشاء", str(exc))
@@ -447,7 +456,9 @@ class CollectPage(Page):
         self._amount.setRange(0.01, max(remaining, 0.01))
         self._amount.setDecimals(2)
         self._amount.setValue(min(remaining, self._next_due_value()))
+        self._treasury = treasury_combo(container)
         form.addRow(QLabel("مبلغ التحصيل"), self._amount)
+        form.addRow(QLabel("يروح لأي خزنة"), self._treasury)
         card.layout().addWidget(
             QLabel("يُوزَّع المبلغ تلقائيًا على الأقساط الأقدم فالأحدث.")
         )
@@ -476,6 +487,7 @@ class CollectPage(Page):
             collected = self._c.installments.collect(
                 self._plan_id, self._amount.value(),
                 actor_id=actor.id if actor else None,
+                treasury_id=self._treasury.currentData(),
             )
         except InstallmentsServiceError as exc:
             QMessageBox.warning(self, "تعذّر التحصيل", str(exc))

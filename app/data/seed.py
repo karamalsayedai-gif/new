@@ -88,3 +88,13 @@ def seed_initial_data(db: "Database") -> None:
                 for key, (default, type_) in SettingKeys.DEFAULTS.items()
             ],
         )
+
+        # 5) الخزائن الافتراضية (الرئيسية + خزنة مبيعات اليوم).
+        conn.executemany(
+            "INSERT INTO treasuries(name, kind, is_default, is_active, created_at) "
+            "VALUES (?, ?, ?, 1, ?)",
+            [
+                ("الخزنة الرئيسية", "cash", 1, now),
+                ("خزنة مبيعات اليوم", "cash", 0, now),
+            ],
+        )

@@ -62,6 +62,7 @@ class InstallmentsService:
         first_due_date: str,
         notes: str | None = None,
         actor_id: int | None = None,
+        treasury_id: int | None = None,
     ) -> tuple[int, int]:
         if not customer_id:
             raise InstallmentsServiceError("بيع التقسيط يتطلب اختيار عميل.")
@@ -135,6 +136,7 @@ class InstallmentsService:
             items=clean,
             installments=schedule,
             invoice_prefix=self._settings.get(SettingKeys.SALES_NO_PREFIX, "ف-"),
+            treasury_id=treasury_id,
         )
         self._audit.log(
             "installment_create", user_id=actor_id, entity="installment_plans",
@@ -173,7 +175,8 @@ class InstallmentsService:
 
     # ── التحصيل ─────────────────────────────────────────────────────────
     def collect(
-        self, plan_id: int, amount: float, actor_id: int | None = None
+        self, plan_id: int, amount: float, actor_id: int | None = None,
+        treasury_id: int | None = None,
     ) -> float:
         if amount <= 0:
             raise InstallmentsServiceError("مبلغ التحصيل يجب أن يكون أكبر من صفر.")
@@ -191,7 +194,8 @@ class InstallmentsService:
             raise InstallmentsServiceError(str(exc)) from exc
 
         collected = self._repo.collect(
-            plan_id=plan_id, amount=amount, day_id=day_id, user_id=actor_id
+            plan_id=plan_id, amount=amount, day_id=day_id, user_id=actor_id,
+            treasury_id=treasury_id,
         )
         self._audit.log(
             "installment_collect", user_id=actor_id, entity="installment_plans",

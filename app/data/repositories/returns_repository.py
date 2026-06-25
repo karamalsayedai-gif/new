@@ -24,6 +24,7 @@ class ReturnsRepository(BaseRepository):
         notes: str | None,
         refund: float,
         items: Sequence[dict],
+        treasury_id: int | None = None,
     ) -> tuple[int, float]:
         total = sum(float(it["quantity"]) * float(it["unit_price"]) for it in items)
         stamp = now_iso()
@@ -59,10 +60,13 @@ class ReturnsRepository(BaseRepository):
                     )
             if refund > 0:
                 conn.execute(
-                    "INSERT INTO treasury(direction, category, amount, ref_table, "
-                    "ref_id, date, day_id, user_id, notes) "
-                    "VALUES ('out', 'return', ?, 'returns', ?, ?, ?, ?, ?)",
-                    (refund, return_id, stamp, day_id, user_id, "ردّ مرتجع بيع"),
+                    "INSERT INTO treasury(direction, category, amount, treasury_id, "
+                    "ref_table, ref_id, date, day_id, user_id, notes) "
+                    "VALUES ('out', 'return', ?, "
+                    "COALESCE(?, (SELECT id FROM treasuries WHERE is_default=1 LIMIT 1)), "
+                    "'returns', ?, ?, ?, ?, ?)",
+                    (refund, treasury_id, return_id, stamp, day_id, user_id,
+                     "ردّ مرتجع بيع"),
                 )
             credit = total - refund
             if credit > 0 and customer_id is not None:
@@ -82,6 +86,7 @@ class ReturnsRepository(BaseRepository):
         notes: str | None,
         refund: float,
         items: Sequence[dict],
+        treasury_id: int | None = None,
     ) -> tuple[int, float]:
         total = sum(float(it["quantity"]) * float(it["unit_price"]) for it in items)
         stamp = now_iso()
@@ -119,10 +124,13 @@ class ReturnsRepository(BaseRepository):
                     )
             if refund > 0:
                 conn.execute(
-                    "INSERT INTO treasury(direction, category, amount, ref_table, "
-                    "ref_id, date, day_id, user_id, notes) "
-                    "VALUES ('in', 'return', ?, 'returns', ?, ?, ?, ?, ?)",
-                    (refund, return_id, stamp, day_id, user_id, "استرداد مرتجع شراء"),
+                    "INSERT INTO treasury(direction, category, amount, treasury_id, "
+                    "ref_table, ref_id, date, day_id, user_id, notes) "
+                    "VALUES ('in', 'return', ?, "
+                    "COALESCE(?, (SELECT id FROM treasuries WHERE is_default=1 LIMIT 1)), "
+                    "'returns', ?, ?, ?, ?, ?)",
+                    (refund, treasury_id, return_id, stamp, day_id, user_id,
+                     "استرداد مرتجع شراء"),
                 )
             debt = total - refund
             if debt > 0 and supplier_id is not None:
