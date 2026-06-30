@@ -141,5 +141,16 @@ def derive_tokens(
     # حبّة التحديد في القائمة الجانبية (شفافة ناعمة).
     ar, ag, ab = hex_to_rgb(t.get("sidebar_active_bg", primary))
     t["nav_active"] = f"rgba({ar}, {ag}, {ab}, 0.95)"
+    # توكنز تتكيّف مع كون الشريط الجانبي داكنًا أو فاتحًا (يدعم الشريط الفاتح).
+    sidebar_dark = luminance(t.get("sidebar_bg", "#1B1C2E")) < 0.5
+    t.setdefault("sidebar_brand", "#FFFFFF" if sidebar_dark else "#222634")
+    t.setdefault(
+        "nav_hover",
+        "rgba(255,255,255,0.08)" if sidebar_dark else "rgba(17,24,39,0.05)",
+    )
+    t.setdefault(
+        "sidebar_border",
+        "rgba(255,255,255,0.16)" if sidebar_dark else "rgba(17,24,39,0.08)",
+    )
     t["is_dark"] = "1" if is_dark else "0"
     return t

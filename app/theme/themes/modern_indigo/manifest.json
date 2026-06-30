@@ -1,0 +1,7 @@
+{
+  "id": "modern_indigo",
+  "name": "عصري إنديجو (فاتح)",
+  "mode": "light",
+  "version": "1.0",
+  "layout": { "sidebar": "right", "sidebar_width": 248, "density": "comfortable" }
+}

@@ -35,7 +35,7 @@ class AppConfig:
     # إصدار مخطط قاعدة البيانات — يُزاد عند أي تغيير في الجداول (Migrations).
     DB_SCHEMA_VERSION = 10
 
-    DEFAULT_THEME = "classic_business"
+    DEFAULT_THEME = "modern_indigo"
 
     _ROOT_FOLDER = "ShowroomERP"
     _DB_FILE = "showroom.db"

@@ -64,7 +64,7 @@ class SettingKeys:
         SHOWROOM_ADDRESS: ("", "string"),
         CURRENCY_SYMBOL: ("ج.م", "string"),
         DEFAULT_INTEREST_PCT: ("0", "double"),
-        THEME_TEMPLATE: ("classic_business", "string"),
+        THEME_TEMPLATE: ("modern_indigo", "string"),
         THEME_PRIMARY: ("", "string"),
         THEME_ACCENT: ("", "string"),
         THEME_SHADE: ("0", "int"),

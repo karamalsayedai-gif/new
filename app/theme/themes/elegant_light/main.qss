@@ -33,26 +33,26 @@ QScrollArea > QWidget > QWidget { background: transparent; }
 }
 #UserName { color: $appbar_text; font-weight: 700; font-size: 12px; }
 
-/* ---- الشريط الجانبي (داكن) ---- */
-#Sidebar { background: $sidebar_bg; border: none; }
+/* ---- الشريط الجانبي ---- */
+#Sidebar { background: $sidebar_bg; border: none; border-left: 1px solid $sidebar_border; }
 #SidebarScroll, #SidebarScroll > QWidget > QWidget { background: transparent; }
 #SidebarBrand {
-  color: #FFFFFF; font-size: 15px; font-weight: 800; padding: 18px 16px 14px 16px;
+  color: $sidebar_brand; font-size: 15px; font-weight: 800; padding: 18px 16px 14px 16px;
 }
 #NavButton {
   text-align: right; padding: $nav_pad; border: none; border-radius: 10px;
   color: $sidebar_text; background: transparent; margin: 3px 12px; font-weight: 600;
 }
-#NavButton:hover { background: rgba(255,255,255,0.06); color: #FFFFFF; }
+#NavButton:hover { background: $nav_hover; color: $sidebar_brand; }
 #NavButton:checked {
   background: $sidebar_active_bg; color: $sidebar_active_text; font-weight: 700;
 }
 #SidebarLogout {
   background: transparent; color: $sidebar_text;
-  border: 1px solid rgba(255,255,255,0.22); border-radius: 10px;
+  border: 1px solid $sidebar_border; border-radius: 10px;
   padding: 11px; font-weight: 700; margin: 8px 14px 14px 14px;
 }
-#SidebarLogout:hover { background: rgba(255,255,255,0.06); color: #FFFFFF; }
+#SidebarLogout:hover { background: $nav_hover; color: $sidebar_brand; }
 
 /* ---- الأزرار ---- */
 QPushButton {
