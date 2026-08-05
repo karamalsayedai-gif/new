@@ -1,0 +1,859 @@
+<title>حساباتي</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  :root{
+    --bg:#F4F6F9; --surface:#FFFFFF; --surface2:#EBEFF4;
+    --ink:#1B2430; --muted:#66707F; --line:#E1E6EC;
+    --accent:#2F4E6E; --accent-ink:#FFFFFF; --accent-soft:#E7EDF4;
+    --good:#2E7D5B; --good-bg:#E7F2EC;
+    --bad:#B0524B; --bad-bg:#F8ECEA;
+    --shadow:0 1px 3px rgba(27,36,48,.08), 0 4px 14px rgba(27,36,48,.04);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#11151C; --surface:#191F29; --surface2:#222A36;
+      --ink:#E7EBF1; --muted:#8B95A5; --line:#2A3340;
+      --accent:#8FB0D1; --accent-ink:#0F1620; --accent-soft:#243244;
+      --good:#63B18E; --good-bg:#1B2B24;
+      --bad:#D18E86; --bad-bg:#33221F;
+      --shadow:0 1px 3px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#F4F6F9; --surface:#FFFFFF; --surface2:#EBEFF4;
+    --ink:#1B2430; --muted:#66707F; --line:#E1E6EC;
+    --accent:#2F4E6E; --accent-ink:#FFFFFF; --accent-soft:#E7EDF4;
+    --good:#2E7D5B; --good-bg:#E7F2EC;
+    --bad:#B0524B; --bad-bg:#F8ECEA;
+    --shadow:0 1px 3px rgba(27,36,48,.08), 0 4px 14px rgba(27,36,48,.04);
+  }
+  :root[data-theme="dark"]{
+    --bg:#11151C; --surface:#191F29; --surface2:#222A36;
+    --ink:#E7EBF1; --muted:#8B95A5; --line:#2A3340;
+    --accent:#8FB0D1; --accent-ink:#0F1620; --accent-soft:#243244;
+    --good:#63B18E; --good-bg:#1B2B24;
+    --bad:#D18E86; --bad-bg:#33221F;
+    --shadow:0 1px 3px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Segoe UI",-apple-system,"Helvetica Neue","Noto Sans Arabic",Tahoma,Arial,sans-serif;
+    font-size:16px; line-height:1.55; direction:rtl;
+    min-height:100dvh;
+  }
+  #app{max-width:520px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column}
+
+  /* ===== Header ===== */
+  header.bar{
+    position:sticky; top:0; z-index:20;
+    background:var(--bg);
+    padding:14px 16px 10px; display:flex; align-items:center; gap:10px;
+  }
+  header.bar h1{font-size:1.25rem; margin:0; font-weight:700; flex:1; letter-spacing:-.01em}
+  .iconbtn{
+    background:var(--surface); border:1px solid var(--line); color:var(--ink);
+    width:38px; height:38px; border-radius:11px; display:inline-flex; align-items:center; justify-content:center;
+    cursor:pointer; flex:none;
+  }
+  .iconbtn svg{width:19px; height:19px}
+  .iconbtn:active{background:var(--surface2)}
+
+  main{flex:1; padding:4px 16px 96px}
+
+  /* ===== Cards & lists ===== */
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)}
+  .row{display:flex; align-items:center; gap:12px; padding:13px 14px; cursor:pointer; border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .row .grow{flex:1; min-width:0}
+  .row .name{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .row .sub{font-size:.8rem; color:var(--muted)}
+  .avatar{
+    width:40px; height:40px; border-radius:12px; flex:none;
+    background:var(--accent-soft); color:var(--accent);
+    display:flex; align-items:center; justify-content:center; font-weight:700;
+  }
+  .amount{font-variant-numeric:tabular-nums; font-weight:700; white-space:nowrap}
+  .pos{color:var(--good)} .neg{color:var(--bad)} .muted{color:var(--muted)}
+  .chip{font-size:.72rem; padding:2px 9px; border-radius:99px; font-weight:600}
+  .chip.pos{background:var(--good-bg); color:var(--good)}
+  .chip.neg{background:var(--bad-bg); color:var(--bad)}
+  .chip.zero{background:var(--surface2); color:var(--muted)}
+
+  .summary{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:6px 0 14px}
+  .stat{padding:12px 14px}
+  .stat .lbl{font-size:.72rem; color:var(--muted); letter-spacing:.04em}
+  .stat .val{font-size:1.15rem; font-weight:700; font-variant-numeric:tabular-nums; margin-top:2px}
+  .stat.wide{grid-column:1/-1}
+
+  .search{
+    width:100%; padding:10px 14px; border-radius:12px; border:1px solid var(--line);
+    background:var(--surface); color:var(--ink); font:inherit; margin-bottom:12px;
+  }
+  .search:focus{outline:2px solid var(--accent); outline-offset:-1px}
+
+  .empty{text-align:center; color:var(--muted); padding:44px 20px; font-size:.92rem}
+  .empty .big{font-size:2rem; margin-bottom:8px}
+
+  .sectitle{font-size:.78rem; color:var(--muted); font-weight:600; letter-spacing:.05em; margin:18px 4px 8px}
+
+  /* ===== Buttons ===== */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:none; border-radius:12px; padding:12px 18px; font:inherit; font-weight:600;
+    cursor:pointer; background:var(--surface2); color:var(--ink);
+  }
+  .btn.primary{background:var(--accent); color:var(--accent-ink)}
+  .btn.danger{background:var(--bad-bg); color:var(--bad)}
+  .btn.block{width:100%}
+  .btn:active{filter:brightness(.93)}
+  .btn:focus-visible,.iconbtn:focus-visible,.navitem:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  .fab{
+    position:fixed; bottom:84px; inset-inline-start:50%; transform:translateX(50%);
+    max-width:520px; width:auto;
+    background:var(--accent); color:var(--accent-ink); border:none; border-radius:99px;
+    padding:13px 22px; font:inherit; font-weight:700; font-size:.95rem;
+    box-shadow:0 6px 18px rgba(27,36,48,.25); cursor:pointer; z-index:15;
+    display:flex; align-items:center; gap:8px;
+  }
+
+  /* ===== Bottom nav ===== */
+  nav.tabs{
+    position:fixed; bottom:0; inset-inline:0; z-index:20;
+    background:var(--surface); border-top:1px solid var(--line);
+    display:flex; justify-content:center;
+  }
+  nav.tabs .inner{display:flex; width:100%; max-width:520px}
+  .navitem{
+    flex:1; background:none; border:none; cursor:pointer; font:inherit;
+    padding:9px 0 max(9px, env(safe-area-inset-bottom)); color:var(--muted);
+    display:flex; flex-direction:column; align-items:center; gap:2px; font-size:.68rem; font-weight:600;
+  }
+  .navitem svg{width:22px; height:22px}
+  .navitem.active{color:var(--accent)}
+
+  /* ===== Sheet (forms) ===== */
+  #overlay{
+    position:fixed; inset:0; background:rgba(15,20,28,.5); z-index:40;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  #overlay.open{display:flex}
+  #sheet{
+    background:var(--surface); width:100%; max-width:520px;
+    border-radius:20px 20px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    max-height:88dvh; overflow-y:auto;
+  }
+  #sheet h2{margin:0 0 16px; font-size:1.05rem}
+  .field{margin-bottom:13px}
+  .field label{display:block; font-size:.8rem; color:var(--muted); font-weight:600; margin-bottom:5px}
+  .field input,.field select,.field textarea{
+    width:100%; padding:11px 13px; border-radius:11px; border:1px solid var(--line);
+    background:var(--bg); color:var(--ink); font:inherit;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--accent); outline-offset:-1px}
+  .seg{display:flex; gap:8px}
+  .seg input{position:absolute; opacity:0; pointer-events:none}
+  .seg label{
+    flex:1; text-align:center; padding:11px 8px; border-radius:11px; border:1px solid var(--line);
+    cursor:pointer; font-weight:600; font-size:.9rem; color:var(--muted); background:var(--bg);
+  }
+  .seg input:checked + label.took{background:var(--good-bg); color:var(--good); border-color:var(--good)}
+  .seg input:checked + label.gave{background:var(--bad-bg); color:var(--bad); border-color:var(--bad)}
+  .seg input:focus-visible + label{outline:2px solid var(--accent); outline-offset:2px}
+  .formactions{display:flex; gap:10px; margin-top:18px}
+  .formactions .btn{flex:1}
+
+  /* ===== Lock screen ===== */
+  #lock{
+    position:fixed; inset:0; background:var(--bg); z-index:60;
+    display:none; flex-direction:column; align-items:center; justify-content:center; gap:22px; padding:24px;
+  }
+  #lock.open{display:flex}
+  #lock .logo{font-size:1.5rem; font-weight:800; color:var(--accent)}
+  .dots{display:flex; gap:12px; height:14px}
+  .dots span{width:13px; height:13px; border-radius:50%; border:2px solid var(--accent); background:transparent}
+  .dots span.on{background:var(--accent)}
+  .pinpad{display:grid; grid-template-columns:repeat(3, 74px); gap:12px}
+  .pinpad button{
+    height:64px; border-radius:18px; border:1px solid var(--line); background:var(--surface);
+    color:var(--ink); font-size:1.4rem; font-weight:600; cursor:pointer; font-variant-numeric:tabular-nums;
+  }
+  .pinpad button:active{background:var(--surface2)}
+  #lockmsg{color:var(--bad); font-size:.85rem; min-height:1.3em}
+
+  /* ===== Misc ===== */
+  #toast{
+    position:fixed; bottom:150px; inset-inline-start:50%; transform:translateX(50%);
+    background:var(--ink); color:var(--bg); padding:10px 20px; border-radius:99px;
+    font-size:.88rem; font-weight:600; z-index:70; opacity:0; transition:opacity .25s; pointer-events:none;
+    max-width:85vw; text-align:center;
+  }
+  #toast.show{opacity:1}
+  .banner{
+    background:var(--bad-bg); color:var(--bad); border-radius:12px; padding:11px 14px;
+    font-size:.85rem; font-weight:600; margin-bottom:12px;
+  }
+  .banner.info{background:var(--accent-soft); color:var(--accent)}
+  .txicon{width:36px; height:36px; border-radius:11px; flex:none; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.1rem}
+  .txicon.in{background:var(--good-bg); color:var(--good)}
+  .txicon.out{background:var(--bad-bg); color:var(--bad)}
+  .txicon.tr{background:var(--accent-soft); color:var(--accent)}
+  .bar-outer{background:var(--surface2); border-radius:6px; height:8px; overflow:hidden; margin-top:6px}
+  .bar-inner{height:100%; border-radius:6px; background:var(--accent)}
+  .del{background:none; border:none; color:var(--muted); cursor:pointer; padding:6px; flex:none}
+  .del svg{width:17px; height:17px}
+  .del:hover{color:var(--bad)}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+
+<div id="app">
+  <header class="bar">
+    <button class="iconbtn" id="backbtn" data-act="back" style="display:none" aria-label="رجوع">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <h1 id="title">حساباتي</h1>
+    <button class="iconbtn" data-act="theme" aria-label="تبديل المظهر">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
+    </button>
+  </header>
+  <main id="view"></main>
+</div>
+
+<nav class="tabs" aria-label="التنقل">
+  <div class="inner">
+    <button class="navitem" data-act="tab" data-tab="merchants">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 19.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14.7c2.4.3 4 2 4 4.3"/></svg>
+      التجار
+    </button>
+    <button class="navitem" data-act="tab" data-tab="wallets">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.3" fill="currentColor" stroke="none"/></svg>
+      الخزن
+    </button>
+    <button class="navitem" data-act="tab" data-tab="reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20h16"/><path d="M6.5 16v-5M11 16V8M15.5 16v-3M20 16V5" /></svg>
+      التقارير
+    </button>
+    <button class="navitem" data-act="tab" data-tab="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.5a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.5h4l.4-2.5a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg>
+      الإعدادات
+    </button>
+  </div>
+</nav>
+
+<div id="overlay">
+  <div id="sheet" role="dialog" aria-modal="true"></div>
+</div>
+
+<div id="lock">
+  <div class="logo">حساباتي 🔒</div>
+  <div class="dots" id="lockdots"></div>
+  <div id="lockmsg"></div>
+  <div class="pinpad" id="lockpad"></div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ============ البيانات ============ */
+const KEY = "hesabati_v1";
+let S; // state
+
+function defaultState(){
+  return {
+    merchants: [],
+    wallets: [{ id: uid(), name: "الخزنة الرئيسية", createdAt: Date.now() }],
+    txs: [],       // {id, merchantId, walletId, type:'took'|'gave', amount, date, note}
+    caps: [],      // رأس مال {id, walletId, amount, date, note}
+    transfers: [], // {id, fromId, toId, amount, date, note}
+    settings: { theme:"auto", pinHash:null, pinLen:0, lastBackup:null }
+  };
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    S = raw ? JSON.parse(raw) : defaultState();
+    if(!S.settings) S.settings = defaultState().settings;
+  }catch(e){ S = defaultState(); }
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+function uid(){ return (crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+Math.random().toString(16).slice(2)); }
+
+/* ============ حسابات ============ */
+// رصيد التاجر: أديت − أخدت → موجب = ليك عنده، سالب = عليك ليه
+function merchantBalance(id){
+  let b = 0;
+  for(const t of S.txs) if(t.merchantId===id) b += (t.type==="gave" ? t.amount : -t.amount);
+  return b;
+}
+// رصيد الخزنة: رأس المال + أخدت − أديت + تحويلات داخلة − خارجة
+function walletBalance(id){
+  let b = 0;
+  for(const c of S.caps) if(c.walletId===id) b += c.amount;
+  for(const t of S.txs) if(t.walletId===id) b += (t.type==="took" ? t.amount : -t.amount);
+  for(const tr of S.transfers){
+    if(tr.toId===id) b += tr.amount;
+    if(tr.fromId===id) b -= tr.amount;
+  }
+  return b;
+}
+function totals(){
+  let leek=0, aleek=0;
+  for(const m of S.merchants){
+    const b = merchantBalance(m.id);
+    if(b>0) leek+=b; else aleek+=-b;
+  }
+  let cash=0;
+  for(const w of S.wallets) cash += walletBalance(w.id);
+  return {leek, aleek, cash};
+}
+
+/* ============ أدوات عرض ============ */
+function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmt(n){
+  const v = Math.round(n*100)/100;
+  return v.toLocaleString("en-US", {maximumFractionDigits:2}) + " ج.م";
+}
+function fdate(d){
+  try{ return new Date(d+"T00:00:00").toLocaleDateString("ar-EG", {day:"numeric", month:"short", year:"numeric"}); }
+  catch(e){ return d; }
+}
+function today(){ return new Date().toISOString().slice(0,10); }
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function walletName(id){ const w=S.wallets.find(w=>w.id===id); return w?w.name:"—"; }
+function merchantName(id){ const m=S.merchants.find(m=>m.id===id); return m?m.name:"—"; }
+function balChip(b){
+  if(Math.abs(b)<0.005) return '<span class="chip zero">خالص</span>';
+  return b>0 ? '<span class="chip pos">ليك</span>' : '<span class="chip neg">عليك</span>';
+}
+
+/* ============ التنقل ============ */
+let nav = { tab:"merchants", view:"list", id:null };
+const TITLES = { merchants:"التجار", wallets:"الخزن", reports:"التقارير", settings:"الإعدادات" };
+
+function go(tab, view="list", id=null){
+  nav = {tab, view, id};
+  render();
+}
+function render(){
+  const titleEl = document.getElementById("title");
+  const back = document.getElementById("backbtn");
+  document.querySelectorAll(".navitem").forEach(b=>b.classList.toggle("active", b.dataset.tab===nav.tab));
+  back.style.display = nav.view==="list" ? "none" : "";
+  let html = "";
+  if(nav.tab==="merchants"){
+    if(nav.view==="list"){ titleEl.textContent="التجار"; html = vMerchants(); }
+    else { const m=S.merchants.find(m=>m.id===nav.id); titleEl.textContent=m?m.name:"تاجر"; html = vMerchantDetail(m); }
+  } else if(nav.tab==="wallets"){
+    if(nav.view==="list"){ titleEl.textContent="الخزن"; html = vWallets(); }
+    else { const w=S.wallets.find(w=>w.id===nav.id); titleEl.textContent=w?w.name:"خزنة"; html = vWalletDetail(w); }
+  } else if(nav.tab==="reports"){ titleEl.textContent="التقارير"; html = vReports(); }
+  else { titleEl.textContent="الإعدادات"; html = vSettings(); }
+  document.getElementById("view").innerHTML = html;
+}
+
+/* ============ شاشة التجار ============ */
+let searchQ = "";
+function vMerchants(){
+  const t = totals();
+  const list = S.merchants
+    .filter(m=>!searchQ || m.name.includes(searchQ))
+    .map(m=>({m, b:merchantBalance(m.id)}))
+    .sort((a,b)=>Math.abs(b.b)-Math.abs(a.b));
+  let rows = list.map(({m,b})=>`
+    <div class="row" data-act="open-merchant" data-id="${m.id}">
+      <div class="avatar">${esc(m.name.trim().charAt(0)||"؟")}</div>
+      <div class="grow">
+        <div class="name">${esc(m.name)}</div>
+        <div class="sub">${balChip(b)}</div>
+      </div>
+      <div class="amount ${b>0.005?"pos":(b<-0.005?"neg":"muted")}">${fmt(Math.abs(b))}</div>
+    </div>`).join("");
+  if(!list.length) rows = `<div class="empty"><div class="big">🤝</div>${S.merchants.length? "مفيش نتيجة للبحث ده" : "لسه مفيش تجار — اضغط «إضافة تاجر» وابدأ"}</div>`;
+  return `
+    <div class="summary">
+      <div class="card stat"><div class="lbl">ليك عند التجار</div><div class="val pos">${fmt(t.leek)}</div></div>
+      <div class="card stat"><div class="lbl">عليك للتجار</div><div class="val neg">${fmt(t.aleek)}</div></div>
+    </div>
+    <input class="search" id="search" type="search" placeholder="🔍 دوّر على تاجر..." value="${esc(searchQ)}">
+    <div class="card">${rows}</div>
+    <button class="fab" data-act="sheet-merchant">＋ إضافة تاجر</button>`;
+}
+
+function vMerchantDetail(m){
+  if(!m) return '<div class="empty">التاجر مش موجود</div>';
+  const b = merchantBalance(m.id);
+  const txs = S.txs.filter(t=>t.merchantId===m.id).sort((a,b)=> b.date.localeCompare(a.date) || (b.createdAt||0)-(a.createdAt||0));
+  let rows = txs.map(t=>`
+    <div class="row" style="cursor:default">
+      <div class="txicon ${t.type==="took"?"in":"out"}">${t.type==="took"?"↓":"↑"}</div>
+      <div class="grow">
+        <div class="name">${t.type==="took"?"أخدت منه":"أديت له"}</div>
+        <div class="sub">${fdate(t.date)} · ${esc(walletName(t.walletId))}${t.note?" · "+esc(t.note):""}</div>
+      </div>
+      <div class="amount ${t.type==="took"?"pos":"neg"}">${fmt(t.amount)}</div>
+      <button class="del" data-act="del-tx" data-id="${t.id}" aria-label="حذف المعاملة">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5h6v2M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg>
+      </button>
+    </div>`).join("");
+  if(!txs.length) rows = '<div class="empty"><div class="big">🧾</div>لسه مفيش معاملات مع التاجر ده</div>';
+  return `
+    <div class="summary">
+      <div class="card stat wide">
+        <div class="lbl">الرصيد مع ${esc(m.name)}</div>
+        <div class="val ${b>0.005?"pos":(b<-0.005?"neg":"")}">${fmt(Math.abs(b))} ${b>0.005?"ليك":(b<-0.005?"عليك":"— خالص")}</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:14px">
+      <button class="btn" data-act="edit-merchant" data-id="${m.id}">✏️ تعديل</button>
+      <button class="btn danger" data-act="del-merchant" data-id="${m.id}">🗑 حذف التاجر</button>
+    </div>
+    <div class="sectitle">المعاملات (${txs.length})</div>
+    <div class="card">${rows}</div>
+    <button class="fab" data-act="sheet-tx" data-id="${m.id}">＋ معاملة جديدة</button>`;
+}
+
+/* ============ شاشة الخزن ============ */
+function vWallets(){
+  const t = totals();
+  const rows = S.wallets.map(w=>{
+    const b = walletBalance(w.id);
+    return `
+    <div class="row" data-act="open-wallet" data-id="${w.id}">
+      <div class="avatar">🏦</div>
+      <div class="grow"><div class="name">${esc(w.name)}</div></div>
+      <div class="amount ${b<-0.005?"neg":""}">${fmt(b)}</div>
+    </div>`;
+  }).join("");
+  return `
+    <div class="summary">
+      <div class="card stat wide"><div class="lbl">إجمالي السيولة في كل الخزن</div><div class="val">${fmt(t.cash)}</div></div>
+    </div>
+    <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap">
+      <button class="btn primary" data-act="sheet-capital">＋ إضافة رأس مال</button>
+      <button class="btn" data-act="sheet-transfer">⇄ تحويل بين الخزن</button>
+      <button class="btn" data-act="sheet-wallet">＋ خزنة جديدة</button>
+    </div>
+    <div class="card">${rows}</div>`;
+}
+
+function vWalletDetail(w){
+  if(!w) return '<div class="empty">الخزنة مش موجودة</div>';
+  const b = walletBalance(w.id);
+  const moves = [];
+  for(const c of S.caps) if(c.walletId===w.id)
+    moves.push({date:c.date, ts:c.createdAt||0, dir:"in", kind:"tr", label:"رأس مال", sub:c.note||"", amount:c.amount, del:{act:"del-cap", id:c.id}});
+  for(const t of S.txs) if(t.walletId===w.id)
+    moves.push({date:t.date, ts:t.createdAt||0, dir:t.type==="took"?"in":"out", kind:t.type==="took"?"in":"out",
+      label:(t.type==="took"?"أخدت من ":"أديت لـ ")+merchantName(t.merchantId), sub:t.note||"", amount:t.amount, del:null});
+  for(const tr of S.transfers){
+    if(tr.toId===w.id) moves.push({date:tr.date, ts:tr.createdAt||0, dir:"in", kind:"tr", label:"تحويل من "+walletName(tr.fromId), sub:tr.note||"", amount:tr.amount, del:{act:"del-transfer", id:tr.id}});
+    if(tr.fromId===w.id) moves.push({date:tr.date, ts:tr.createdAt||0, dir:"out", kind:"tr", label:"تحويل إلى "+walletName(tr.toId), sub:tr.note||"", amount:tr.amount, del:{act:"del-transfer", id:tr.id}});
+  }
+  moves.sort((a,b)=> b.date.localeCompare(a.date) || b.ts-a.ts);
+  let rows = moves.map(mv=>`
+    <div class="row" style="cursor:default">
+      <div class="txicon ${mv.kind}">${mv.dir==="in"?"↓":"↑"}</div>
+      <div class="grow">
+        <div class="name">${esc(mv.label)}</div>
+        <div class="sub">${fdate(mv.date)}${mv.sub?" · "+esc(mv.sub):""}</div>
+      </div>
+      <div class="amount ${mv.dir==="in"?"pos":"neg"}">${fmt(mv.amount)}</div>
+      ${mv.del?`<button class="del" data-act="${mv.del.act}" data-id="${mv.del.id}" aria-label="حذف">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5h6v2M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg>
+      </button>`:""}
+    </div>`).join("");
+  if(!moves.length) rows = '<div class="empty"><div class="big">💤</div>مفيش حركات في الخزنة دي لسه</div>';
+  const canDelete = !moves.length && S.wallets.length>1;
+  return `
+    <div class="summary">
+      <div class="card stat wide"><div class="lbl">رصيد ${esc(w.name)}</div><div class="val ${b<-0.005?"neg":""}">${fmt(b)}</div></div>
+    </div>
+    ${canDelete?`<button class="btn danger" style="margin-bottom:14px" data-act="del-wallet" data-id="${w.id}">🗑 حذف الخزنة</button>`:""}
+    <div class="sectitle">الحركات (${moves.length})</div>
+    <div class="card">${rows}</div>`;
+}
+
+/* ============ شاشة التقارير ============ */
+function vReports(){
+  const t = totals();
+  const net = t.leek - t.aleek;
+  const ym = today().slice(0,7);
+  let mIn=0, mOut=0;
+  for(const c of S.caps) if(c.date.startsWith(ym)) mIn += c.amount;
+  for(const tx of S.txs) if(tx.date.startsWith(ym)){ if(tx.type==="took") mIn+=tx.amount; else mOut+=tx.amount; }
+  const tops = S.merchants.map(m=>({m, b:merchantBalance(m.id)}))
+    .filter(x=>Math.abs(x.b)>0.005).sort((a,b)=>Math.abs(b.b)-Math.abs(a.b)).slice(0,5);
+  const topRows = tops.map(({m,b})=>`
+    <div class="row" data-act="open-merchant" data-id="${m.id}">
+      <div class="grow"><div class="name">${esc(m.name)}</div><div class="sub">${balChip(b)}</div></div>
+      <div class="amount ${b>0?"pos":"neg"}">${fmt(Math.abs(b))}</div>
+    </div>`).join("") || '<div class="empty">مفيش أرصدة قائمة</div>';
+  const maxW = Math.max(...S.wallets.map(w=>Math.abs(walletBalance(w.id))), 1);
+  const walletRows = S.wallets.map(w=>{
+    const b = walletBalance(w.id);
+    const pct = Math.min(100, Math.abs(b)/maxW*100);
+    return `<div style="padding:10px 14px; border-bottom:1px solid var(--line)">
+      <div style="display:flex; justify-content:space-between; font-size:.88rem">
+        <span style="font-weight:600">${esc(w.name)}</span>
+        <span class="amount ${b<-0.005?"neg":""}" style="font-size:.88rem">${fmt(b)}</span>
+      </div>
+      <div class="bar-outer"><div class="bar-inner" style="width:${pct}%; ${b<0?"background:var(--bad)":""}"></div></div>
+    </div>`;
+  }).join("");
+  return `
+    <div class="summary">
+      <div class="card stat"><div class="lbl">إجمالي ليك</div><div class="val pos">${fmt(t.leek)}</div></div>
+      <div class="card stat"><div class="lbl">إجمالي عليك</div><div class="val neg">${fmt(t.aleek)}</div></div>
+      <div class="card stat"><div class="lbl">الصافي (ليك − عليك)</div><div class="val ${net>=0?"pos":"neg"}">${fmt(Math.abs(net))} ${net>=0?"ليك":"عليك"}</div></div>
+      <div class="card stat"><div class="lbl">السيولة في الخزن</div><div class="val">${fmt(t.cash)}</div></div>
+      <div class="card stat"><div class="lbl">داخل الشهر ده</div><div class="val pos">${fmt(mIn)}</div></div>
+      <div class="card stat"><div class="lbl">خارج الشهر ده</div><div class="val neg">${fmt(mOut)}</div></div>
+    </div>
+    <div class="sectitle">أرصدة الخزن</div>
+    <div class="card">${walletRows}</div>
+    <div class="sectitle">أكبر الأرصدة مع التجار</div>
+    <div class="card">${topRows}</div>`;
+}
+
+/* ============ شاشة الإعدادات ============ */
+function vSettings(){
+  const st = S.settings;
+  const themeLabel = st.theme==="auto"?"تلقائي حسب الموبايل":(st.theme==="dark"?"غامق":"فاتح");
+  const daysSince = st.lastBackup ? Math.floor((Date.now()-st.lastBackup)/86400000) : null;
+  const needBackup = st.lastBackup===null ? (S.txs.length>0) : daysSince>=7;
+  const backupLine = st.lastBackup ? `آخر نسخة احتياطية من ${daysSince===0?"النهارده":daysSince+" يوم"}` : "لسه معملتش نسخة احتياطية";
+  return `
+    ${needBackup?`<div class="banner">⚠️ ${backupLine} — اعمل نسخة دلوقتي عشان بياناتك متضيعش</div>`:""}
+    <div class="sectitle">النسخة الاحتياطية</div>
+    <div class="card">
+      <div class="row" data-act="export">
+        <div class="txicon in">⬇</div>
+        <div class="grow"><div class="name">تصدير نسخة احتياطية</div><div class="sub">${backupLine}</div></div>
+      </div>
+      <div class="row" data-act="import">
+        <div class="txicon tr">⬆</div>
+        <div class="grow"><div class="name">استعادة نسخة احتياطية</div><div class="sub">هتستبدل البيانات الحالية بالنسخة</div></div>
+      </div>
+    </div>
+    <div class="sectitle">الحماية</div>
+    <div class="card">
+      <div class="row" data-act="sheet-pin">
+        <div class="txicon tr">🔒</div>
+        <div class="grow"><div class="name">${st.pinHash?"تغيير أو إلغاء الرقم السري":"تفعيل الرقم السري"}</div>
+        <div class="sub">${st.pinHash?"القفل شغّال — التطبيق بيقفل مع كل فتح":"محدش يقدر يفتح التطبيق غيرك"}</div></div>
+      </div>
+    </div>
+    <div class="sectitle">المظهر</div>
+    <div class="card">
+      <div class="row" data-act="cycle-theme">
+        <div class="txicon tr">🎨</div>
+        <div class="grow"><div class="name">الوضع: ${themeLabel}</div><div class="sub">اضغط للتبديل: تلقائي ← فاتح ← غامق</div></div>
+      </div>
+    </div>
+    <div class="sectitle">التثبيت على الموبايل</div>
+    <div class="card"><div style="padding:13px 14px; font-size:.86rem; color:var(--muted)">
+      افتح الصفحة دي في <b>كروم</b> على موبايلك، ادوس على قائمة النقط الثلاث ⋮ فوق، واختار
+      <b>«إضافة إلى الشاشة الرئيسية»</b> — هتلاقي أيقونة «حساباتي» جنب تطبيقاتك وتفتح على طول.
+      <br><br>البيانات متخزنة على موبايلك محليًا — متمسحش بيانات المتصفح، واعمل نسخة احتياطية بانتظام.
+    </div></div>
+    <input type="file" id="importfile" accept="application/json,.json" style="display:none">`;
+}
+
+/* ============ الشيتات (النماذج) ============ */
+function openSheet(html){
+  document.getElementById("sheet").innerHTML = html;
+  document.getElementById("overlay").classList.add("open");
+  const f = document.querySelector("#sheet input:not([type=hidden]):not([type=radio])");
+  if(f) setTimeout(()=>f.focus(), 60);
+}
+function closeSheet(){ document.getElementById("overlay").classList.remove("open"); }
+function walletOptions(sel){
+  return S.wallets.map(w=>`<option value="${w.id}" ${w.id===sel?"selected":""}>${esc(w.name)} (${fmt(walletBalance(w.id))})</option>`).join("");
+}
+function cancelBtn(){ return '<button type="button" class="btn" data-act="close-sheet">إلغاء</button>'; }
+
+function sheetMerchant(m){
+  openSheet(`<h2>${m?"تعديل التاجر":"تاجر جديد"}</h2>
+  <form data-form="merchant">
+    <input type="hidden" name="id" value="${m?m.id:""}">
+    <div class="field"><label>اسم التاجر</label><input name="name" required maxlength="60" value="${m?esc(m.name):""}" placeholder="مثلًا: الحاج محمود"></div>
+    <div class="field"><label>رقم التليفون (اختياري)</label><input name="phone" inputmode="tel" maxlength="20" value="${m?esc(m.phone||""):""}"></div>
+    <div class="formactions"><button class="btn primary" type="submit">حفظ</button>${cancelBtn()}</div>
+  </form>`);
+}
+function sheetTx(merchantId){
+  openSheet(`<h2>معاملة جديدة مع ${esc(merchantName(merchantId))}</h2>
+  <form data-form="tx">
+    <input type="hidden" name="merchantId" value="${merchantId}">
+    <div class="field"><label>نوع المعاملة</label>
+      <div class="seg">
+        <input type="radio" id="t-took" name="type" value="took" checked><label for="t-took" class="took">أخدت منه فلوس ↓</label>
+        <input type="radio" id="t-gave" name="type" value="gave"><label for="t-gave" class="gave">أديت له فلوس ↑</label>
+      </div>
+    </div>
+    <div class="field"><label>المبلغ (ج.م)</label><input name="amount" type="number" inputmode="decimal" step="0.01" min="0.01" required placeholder="0.00"></div>
+    <div class="field"><label>الخزنة</label><select name="walletId">${walletOptions()}</select></div>
+    <div class="field"><label>التاريخ</label><input name="date" type="date" value="${today()}" required></div>
+    <div class="field"><label>ملاحظة (اختياري)</label><input name="note" maxlength="120" placeholder="مثلًا: تحت حساب البضاعة"></div>
+    <div class="formactions"><button class="btn primary" type="submit">حفظ المعاملة</button>${cancelBtn()}</div>
+  </form>`);
+}
+function sheetWallet(){
+  openSheet(`<h2>خزنة جديدة</h2>
+  <form data-form="wallet">
+    <div class="field"><label>اسم الخزنة</label><input name="name" required maxlength="40" placeholder="مثلًا: بنك مصر / فودافون كاش"></div>
+    <div class="formactions"><button class="btn primary" type="submit">إضافة</button>${cancelBtn()}</div>
+  </form>`);
+}
+function sheetCapital(){
+  openSheet(`<h2>إضافة رأس مال</h2>
+  <form data-form="capital">
+    <div class="field"><label>الخزنة</label><select name="walletId">${walletOptions()}</select></div>
+    <div class="field"><label>المبلغ (ج.م)</label><input name="amount" type="number" inputmode="decimal" step="0.01" min="0.01" required placeholder="0.00"></div>
+    <div class="field"><label>التاريخ</label><input name="date" type="date" value="${today()}" required></div>
+    <div class="field"><label>ملاحظة (اختياري)</label><input name="note" maxlength="120"></div>
+    <div class="formactions"><button class="btn primary" type="submit">إضافة</button>${cancelBtn()}</div>
+  </form>`);
+}
+function sheetTransfer(){
+  if(S.wallets.length<2){ toast("محتاج خزنتين على الأقل للتحويل"); return; }
+  openSheet(`<h2>تحويل بين الخزن</h2>
+  <form data-form="transfer">
+    <div class="field"><label>من خزنة</label><select name="fromId">${walletOptions()}</select></div>
+    <div class="field"><label>إلى خزنة</label><select name="toId">${walletOptions(S.wallets[1].id)}</select></div>
+    <div class="field"><label>المبلغ (ج.م)</label><input name="amount" type="number" inputmode="decimal" step="0.01" min="0.01" required placeholder="0.00"></div>
+    <div class="field"><label>التاريخ</label><input name="date" type="date" value="${today()}" required></div>
+    <div class="field"><label>ملاحظة (اختياري)</label><input name="note" maxlength="120"></div>
+    <div class="formactions"><button class="btn primary" type="submit">تحويل</button>${cancelBtn()}</div>
+  </form>`);
+}
+function sheetPin(){
+  const has = !!S.settings.pinHash;
+  openSheet(`<h2>${has?"تغيير أو إلغاء الرقم السري":"تفعيل الرقم السري"}</h2>
+  <form data-form="pin">
+    ${has?`<div class="field"><label>الرقم السري الحالي</label><input name="current" type="password" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" required></div>`:""}
+    <div class="field"><label>الرقم السري الجديد (4-6 أرقام) — سيبه فاضي لإلغاء القفل</label>
+      <input name="pin" type="password" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" placeholder="••••"></div>
+    <div class="formactions"><button class="btn primary" type="submit">حفظ</button>${cancelBtn()}</div>
+  </form>`);
+}
+function sheetConfirm(msg, act, id){
+  openSheet(`<h2>تأكيد</h2>
+  <p style="margin:0 0 6px; font-size:.95rem">${msg}</p>
+  <div class="formactions">
+    <button class="btn danger" data-act="confirm-yes" data-confirm-act="${act}" data-id="${id}">أيوه، امسح</button>
+    ${cancelBtn()}
+  </div>`);
+}
+
+/* ============ الرقم السري ============ */
+async function pinHash(pin){
+  try{
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("hesabati:"+pin));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }catch(e){
+    let h=0; const s="hesabati:"+pin;
+    for(let i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))>>>0; }
+    return "f"+h.toString(16);
+  }
+}
+let lockBuf = "";
+function renderLockDots(){
+  const n = S.settings.pinLen||4;
+  document.getElementById("lockdots").innerHTML =
+    Array.from({length:n},(_,i)=>`<span class="${i<lockBuf.length?"on":""}"></span>`).join("");
+}
+function showLock(){
+  const lock = document.getElementById("lock");
+  lock.classList.add("open");
+  lockBuf=""; renderLockDots();
+  document.getElementById("lockmsg").textContent="";
+  const pad = document.getElementById("lockpad");
+  const keys = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
+  pad.innerHTML = keys.map(k=>k===""?"<span></span>":`<button data-key="${k}">${k}</button>`).join("");
+}
+async function lockPress(k){
+  const msg = document.getElementById("lockmsg");
+  if(k==="⌫"){ lockBuf=lockBuf.slice(0,-1); renderLockDots(); return; }
+  if(lockBuf.length >= (S.settings.pinLen||6)) return;
+  lockBuf += k; renderLockDots();
+  if(lockBuf.length === S.settings.pinLen){
+    const h = await pinHash(lockBuf);
+    if(h === S.settings.pinHash){
+      document.getElementById("lock").classList.remove("open");
+      lockBuf="";
+    } else {
+      msg.textContent = "الرقم غلط، جرّب تاني";
+      lockBuf=""; setTimeout(renderLockDots, 350);
+    }
+  } else msg.textContent="";
+}
+
+/* ============ نسخ احتياطي ============ */
+function doExport(){
+  const data = JSON.stringify({app:"hesabati", version:1, exportedAt:new Date().toISOString(), state:S}, null, 1);
+  const blob = new Blob([data], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "hesabati-backup-"+today()+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  S.settings.lastBackup = Date.now(); save(); render();
+  toast("تم تصدير النسخة الاحتياطية ✅");
+}
+function doImport(file){
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const j = JSON.parse(r.result);
+      const st = j.state && j.app==="hesabati" ? j.state : j;
+      if(!st.merchants || !st.wallets || !st.txs) throw new Error("bad");
+      const keepTheme = S.settings.theme;
+      S = st;
+      if(!S.settings) S.settings = defaultState().settings;
+      S.settings.theme = keepTheme;
+      save(); applyTheme(); render();
+      toast("تمت الاستعادة بنجاح ✅");
+    }catch(e){ toast("الملف ده مش نسخة احتياطية صحيحة ❌"); }
+  };
+  r.readAsText(file);
+}
+
+/* ============ الثيم ============ */
+function applyTheme(){
+  const t = S.settings.theme;
+  if(t==="auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+}
+
+/* ============ الأحداث ============ */
+document.addEventListener("click", async (e)=>{
+  const keyBtn = e.target.closest("#lockpad [data-key]");
+  if(keyBtn){ lockPress(keyBtn.dataset.key); return; }
+  const el = e.target.closest("[data-act]");
+  if(!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  switch(act){
+    case "tab": go(el.dataset.tab); break;
+    case "back": go(nav.tab); break;
+    case "theme": case "cycle-theme": {
+      const order = ["auto","light","dark"];
+      S.settings.theme = order[(order.indexOf(S.settings.theme)+1)%3];
+      save(); applyTheme();
+      if(nav.tab==="settings") render();
+      toast("الوضع: " + (S.settings.theme==="auto"?"تلقائي":(S.settings.theme==="dark"?"غامق":"فاتح")));
+      break;
+    }
+    case "open-merchant": go("merchants","detail", id); break;
+    case "open-wallet": go("wallets","detail", id); break;
+    case "sheet-merchant": sheetMerchant(null); break;
+    case "edit-merchant": sheetMerchant(S.merchants.find(m=>m.id===id)); break;
+    case "sheet-tx": sheetTx(id); break;
+    case "sheet-wallet": sheetWallet(); break;
+    case "sheet-capital": sheetCapital(); break;
+    case "sheet-transfer": sheetTransfer(); break;
+    case "sheet-pin": sheetPin(); break;
+    case "close-sheet": closeSheet(); break;
+    case "del-merchant": {
+      const n = S.txs.filter(t=>t.merchantId===id).length;
+      sheetConfirm(`هتمسح التاجر ${esc(merchantName(id))}${n?` ومعاه ${n} معاملة — أرصدة الخزن هتتعدل تبعًا لكده`:""}. متأكد؟`, "del-merchant", id);
+      break;
+    }
+    case "del-tx": sheetConfirm("هتمسح المعاملة دي ورصيد التاجر والخزنة هيتعدلوا. متأكد؟", "del-tx", id); break;
+    case "del-cap": sheetConfirm("هتمسح إضافة رأس المال دي من الخزنة. متأكد؟", "del-cap", id); break;
+    case "del-transfer": sheetConfirm("هتمسح التحويل ده وأرصدة الخزنتين هتتعدل. متأكد؟", "del-transfer", id); break;
+    case "del-wallet": sheetConfirm(`هتمسح خزنة ${esc(walletName(id))} (فاضية). متأكد؟`, "del-wallet", id); break;
+    case "confirm-yes": {
+      const a = el.dataset.confirmAct, cid = el.dataset.id;
+      if(a==="del-merchant"){ S.txs = S.txs.filter(t=>t.merchantId!==cid); S.merchants = S.merchants.filter(m=>m.id!==cid); go("merchants"); }
+      else if(a==="del-tx"){ S.txs = S.txs.filter(t=>t.id!==cid); render(); }
+      else if(a==="del-cap"){ S.caps = S.caps.filter(c=>c.id!==cid); render(); }
+      else if(a==="del-transfer"){ S.transfers = S.transfers.filter(t=>t.id!==cid); render(); }
+      else if(a==="del-wallet"){ S.wallets = S.wallets.filter(w=>w.id!==cid); go("wallets"); }
+      save(); closeSheet(); toast("تم المسح");
+      break;
+    }
+    case "export": doExport(); break;
+    case "import": document.getElementById("importfile").click(); break;
+  }
+});
+
+document.addEventListener("change", (e)=>{
+  if(e.target.id==="importfile" && e.target.files[0]) doImport(e.target.files[0]);
+});
+document.addEventListener("input", (e)=>{
+  if(e.target.id==="search"){ searchQ = e.target.value.trim();
+    render();
+    const s = document.getElementById("search"); s.focus(); s.setSelectionRange(s.value.length, s.value.length);
+  }
+});
+document.getElementById("overlay").addEventListener("click", (e)=>{ if(e.target.id==="overlay") closeSheet(); });
+
+document.addEventListener("submit", async (e)=>{
+  const form = e.target.closest("form[data-form]");
+  if(!form) return;
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(form).entries());
+  const kind = form.dataset.form;
+  if(kind==="merchant"){
+    const name = d.name.trim();
+    if(!name) return;
+    if(d.id){ const m = S.merchants.find(m=>m.id===d.id); if(m){ m.name=name; m.phone=d.phone.trim(); } }
+    else S.merchants.push({id:uid(), name, phone:d.phone.trim(), createdAt:Date.now()});
+    save(); closeSheet(); render(); toast("تم حفظ التاجر ✅");
+  }
+  else if(kind==="tx"){
+    const amount = parseFloat(d.amount);
+    if(!(amount>0)) { toast("اكتب مبلغ صحيح"); return; }
+    S.txs.push({id:uid(), merchantId:d.merchantId, walletId:d.walletId, type:d.type, amount, date:d.date, note:d.note.trim(), createdAt:Date.now()});
+    save(); closeSheet(); render(); toast("تم تسجيل المعاملة ✅");
+  }
+  else if(kind==="wallet"){
+    const name = d.name.trim(); if(!name) return;
+    S.wallets.push({id:uid(), name, createdAt:Date.now()});
+    save(); closeSheet(); render(); toast("تمت إضافة الخزنة ✅");
+  }
+  else if(kind==="capital"){
+    const amount = parseFloat(d.amount);
+    if(!(amount>0)) { toast("اكتب مبلغ صحيح"); return; }
+    S.caps.push({id:uid(), walletId:d.walletId, amount, date:d.date, note:d.note.trim(), createdAt:Date.now()});
+    save(); closeSheet(); render(); toast("تمت إضافة رأس المال ✅");
+  }
+  else if(kind==="transfer"){
+    const amount = parseFloat(d.amount);
+    if(!(amount>0)) { toast("اكتب مبلغ صحيح"); return; }
+    if(d.fromId===d.toId){ toast("اختار خزنتين مختلفتين"); return; }
+    S.transfers.push({id:uid(), fromId:d.fromId, toId:d.toId, amount, date:d.date, note:d.note.trim(), createdAt:Date.now()});
+    save(); closeSheet(); render(); toast("تم التحويل ✅");
+  }
+  else if(kind==="pin"){
+    if(S.settings.pinHash){
+      const cur = await pinHash(d.current||"");
+      if(cur !== S.settings.pinHash){ toast("الرقم الحالي غلط ❌"); return; }
+    }
+    const p = (d.pin||"").trim();
+    if(p===""){
+      S.settings.pinHash = null; S.settings.pinLen = 0;
+      save(); closeSheet(); render(); toast("تم إلغاء القفل");
+    } else if(/^[0-9]{4,6}$/.test(p)){
+      S.settings.pinHash = await pinHash(p); S.settings.pinLen = p.length;
+      save(); closeSheet(); render(); toast("تم تفعيل الرقم السري 🔒");
+    } else toast("الرقم لازم يكون من 4 لـ 6 أرقام");
+  }
+});
+
+/* ============ تشغيل ============ */
+load();
+applyTheme();
+if(S.settings.pinHash) showLock();
+render();
+save();
+</script>
